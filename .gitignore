@@ -1,0 +1,16 @@
+# Visual Studio files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+Win32/
+x64/
+Debug/
+Release/
+
+.vs/
+
+vsprojects/packages

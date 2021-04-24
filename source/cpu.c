@@ -27,7 +27,7 @@ void Chip8_Initialize(struct chip8_cpu *cpu)
     {
         cpu->stack[i] = 0;
     }
-    cpu->stack_index = 0;
+    cpu->stack_count = 0;
 
     Chip8_ClearScreen(cpu);
 
@@ -73,7 +73,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
     case 0x01:
         // Jump to address NNN
-        Chip8_JumpToAddress(cpu, (uint16_t)(instruction & 0x0FFF));
+        cpu->pc = (uint16_t)(instruction & 0x0FFF);
         break;
 
     case 0x02:
@@ -294,6 +294,18 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         // Default error handling
         cpu->pc = cpu->pc; // Do something cause unimplemented
     }
+
+    switch ((uint8_t)((instruction & 0xF000) >> 12))
+    {
+    case 0x00:
+    case 0x01:
+    case 0x02:
+    case 0x0B:
+        break;
+
+    default:
+        cpu->pc += 2;
+    }
 }
 
 void Chip8_ClearScreen(struct chip8_cpu *cpu)
@@ -305,14 +317,10 @@ void Chip8_ClearScreen(struct chip8_cpu *cpu)
     }
 }
 
-void Chip8_JumpToAddress(struct chip8_cpu *cpu, uint16_t address)
-{
-    cpu->pc = address;
-}
-
 void Chip8_JumpToSubRoutine(struct chip8_cpu *cpu, uint16_t address)
 {
     // Push pc to stack
+    Chip8_StackPush(cpu, cpu->pc);
     cpu->pc = address;
 }
 
@@ -324,14 +332,27 @@ void Chip8_ReturnFromSubRoutine(struct chip8_cpu *cpu)
 
 uint16_t Chip8_StackPop(struct chip8_cpu *cpu)
 {
-    //
+    if (cpu->stack_count <= 0)
+    {
+        // Stack under-flow condition
+        //printf("Error: Stack Underflow\n");
+        //cpu->stack_count = 0;
+    }
+
+    uint16_t value = cpu->stack[cpu->stack_count - 1];
+    cpu->stack_count--;
+
+    return value;
 }
 
-uint16_t Chip8_StackPush(struct chip8_cpu *cpu)
+void Chip8_StackPush(struct chip8_cpu *cpu, uint16_t value)
 {
-    cpu->stack_index++;
-    if (cpu->stack_index > STACK_SIZE)
+    cpu->stack_count++;
+    if (cpu->stack_count >= STACK_SIZE)
     {
-        cpu->stack_index = 0;
+        // Stack over-flow condition
+        //printf("Error: Stack Overflow\n");
+        cpu->stack_count = 0;
     }
+    cpu->stack[cpu->stack_count] = value;
 }

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{20b90ce4-7fcb-4731-b9a0-075f875de82d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{f18ab499-84e1-499f-8eff-9754361e0e52}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="gl3w">
+      <UniqueIdentifier>{42f99867-3108-43b8-99d0-fabefaf1f2e3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\imgui\imgui.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\imgui_demo.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\imgui_draw.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\imgui_tables.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\imgui_widgets.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.c">
+      <Filter>sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\imgui\imconfig.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\imgui.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.h" />
+    <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\glcorearb.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\thirdparty\imgui\misc\debuggers\imgui.natvis" />
+    <None Include="..\..\thirdparty\imgui\examples\README.txt" />
+  </ItemGroup>
+</Project>
