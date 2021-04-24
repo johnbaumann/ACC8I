@@ -14,3 +14,5 @@ Release/
 .vs/
 
 vsprojects/packages
+
+imgui.ini
