@@ -1,13 +1,16 @@
 #include "cpu.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-//#include <memory.h>
+#include <stdbool.h> // boolean type
+#include <stdint.h> // number types
+#include <stdlib.h> // rand
 
 // References
 // https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Technical-Reference
 // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 //
+
+struct chip8_cpu c8_cpu;
+
 
 void Chip8_Initialize(struct chip8_cpu *cpu)
 {
@@ -41,17 +44,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 {
     uint16_t instruction = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc + 1];
 
-    /*
-        uint8_t instruction_nibbles[4] =
-        {
-            (uint8_t)((instruction & 0xF000) >> 12),
-            (uint8_t)((instruction & 0x0F00) >> 8),
-            (uint8_t)((instruction & 0x00F0) >> 4),
-            (uint8_t)((instruction & 0x000F))
-        };
-        */
-
-    switch ((uint8_t)((instruction & 0xF000) >> 12))
+    switch (Nibble1(instruction))
     {
     case 0x00:
         // Execute machine language subroutine at address NNN
@@ -67,23 +60,23 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         }
         else
         {
-            Chip8_JumpToSubRoutine(cpu, (uint16_t)(instruction & 0x0FFF));
+            Chip8_JumpToSubRoutine(cpu, NNN(instruction));
         }
         break;
 
     case 0x01:
         // Jump to address NNN
-        cpu->pc = (uint16_t)(instruction & 0x0FFF);
+        cpu->pc = NNN(instruction);
         break;
 
     case 0x02:
         // Execute subroutine starting at address NNN
-        Chip8_JumpToSubRoutine(cpu, (uint16_t)(instruction & 0x0FFF));
+        Chip8_JumpToSubRoutine(cpu, NNN(instruction));
         break;
 
     case 0x03:
         // Skip the following instruction if the value of register VX equals NN
-        if (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] == (uint8_t)((instruction & 0x00FF)))
+        if (cpu->cpureg_V[Nibble2(instruction)] == NN(instruction))
         {
             cpu->pc += 2;
         }
@@ -91,7 +84,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
     case 0x04:
         // Skip the following instruction if the value of register VX is not equal to NN
-        if (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] != (uint8_t)((instruction & 0x00FF)))
+        if (cpu->cpureg_V[Nibble2(instruction)] != NN(instruction))
         {
             cpu->pc += 2;
         }
@@ -99,83 +92,78 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
     case 0x05:
         // Skip the following instruction if the value of register VX is equal to the value of register VY
-        if (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] == cpu->cpureg_V[(uint8_t)((instruction & 0x00F0) >> 4)])
+        if (cpu->cpureg_V[Nibble2(instruction)] == cpu->cpureg_V[Nibble3(instruction)])
         {
             cpu->pc += 2;
         }
         break;
 
-    case 0x06:
+    case 0x06: // 6XNN
         // Store number NN in register VX
-        cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] = (uint8_t)((instruction & 0x00FF));
+        cpu->cpureg_V[Nibble2(instruction)] = NN(instruction);
         break;
 
     case 0x07:
         // Add the value NN to register VX
-        cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] += (uint8_t)((instruction & 0x00FF));
+        cpu->cpureg_V[Nibble2(instruction)] += NN(instruction);
         break;
 
     case 0x08:
-        switch ((uint8_t)(instruction & 0x000F))
+        switch (Nibble4(instruction))
         {
         // Store the value of register VY in register VX
         case 0x00: // 8XY0
-            cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] = cpu->cpureg_V[(uint8_t)((instruction & 0x00F0) >> 4)];
+            cpu->cpureg_V[Nibble2(instruction)] = cpu->cpureg_V[Nibble3(instruction)];
             break;
 
         // Set VX to VX OR VY
         case 0x01: // 8XY1
-            cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] |= cpu->cpureg_V[(uint8_t)((instruction & 0x00F0) >> 4)];
+            cpu->cpureg_V[Nibble2(instruction)] |= cpu->cpureg_V[Nibble3(instruction)];
             break;
 
         // Set VX to VX AND VY
         case 0x02: // 8XY2
-            cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] &= cpu->cpureg_V[(uint8_t)((instruction & 0x00F0) >> 4)];
+            cpu->cpureg_V[Nibble2(instruction)] &= cpu->cpureg_V[Nibble3(instruction)];
             break;
 
         // Set VX to VX XOR VY
         case 0x03: // 8XY3
-            cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] ^= cpu->cpureg_V[(uint8_t)((instruction & 0x00F0) >> 4)];
+            cpu->cpureg_V[Nibble2(instruction)] ^= cpu->cpureg_V[Nibble3(instruction)];
             break;
 
-        /* 
-            Add the value of register VY to register VX
-            Set VF to 01 if a carry occurs
-            Set VF to 00 if a carry does not occur
-        */
+         
+        // Add the value of register VY to register VX
+        // Set VF to 01 if a carry occurs
+        // Set VF to 00 if a carry does not occur
         case 0x04: // 8XY4
             break;
 
-        /*
-            Subtract the value of register VY from register VX
-            Set VF to 00 if a borrow occurs
-            Set VF to 01 if a borrow does not occur
-        */
+        // Subtract the value of register VY from register VX
+        // Set VF to 00 if a borrow occurs
+        // Set VF to 01 if a borrow does not occur
         case 0x05: // 8XY5
             break;
 
-        /*
-            Store the value of register VY shifted right one bit in register VX¹
-            Set register VF to the least significant bit prior to the shift
-            VY is unchanged
-        */
+        // Store the value of register VY shifted right one bit in register VX¹
+        // Set register VF to the least significant bit prior to the shift
+        // VY is unchanged
         case 0x06: // 8XY6
+            cpu->cpureg_V[0x0F] = (uint8_t)(instruction & 0x01);
+            cpu->cpureg_V[Nibble2(instruction)] = cpu->cpureg_V[Nibble3(instruction)] >> 1;
             break;
 
-        /*
-            Set register VX to the value of VY minus VX
-            Set VF to 00 if a borrow occurs
-            Set VF to 01 if a borrow does not occur
-        */
+        // Set register VX to the value of VY minus VX
+        // Set VF to 00 if a borrow occurs
+        // Set VF to 01 if a borrow does not occur
         case 0x07: // 8XY7
             break;
 
-        /*
-            Store the value of register VY shifted left one bit in register VX¹
-            Set register VF to the most significant bit prior to the shift
-            VY is unchanged
-        */
+        // Store the value of register VY shifted left one bit in register VX¹
+        // Set register VF to the most significant bit prior to the shift
+        // VY is unchanged
         case 0x0E: // 8XYE
+            cpu->cpureg_V[0x0F] = (uint8_t)((instruction & 0x80) >> 7);
+            cpu->cpureg_V[Nibble2(instruction)] = cpu->cpureg_V[Nibble3(instruction)] << 1;
             break;
 
             //case default:
@@ -185,36 +173,49 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
     // Skip the following instruction if the value of register VX is not equal to the value of register VY
     case 0x09: // 9XY0
+        if (cpu->cpureg_V[Nibble2(instruction)] != cpu->cpureg_V[Nibble3(instruction)])
+        {
+            cpu->pc += 2;
+        }
         break;
 
     // Store memory address NNN in register I
     case 0x0A: // ANNN
-
+        cpu->cpureg_I = NNN(instruction);
         break;
 
     // Jump to address NNN + V0
     case 0x0B: // BNNN
-
+        cpu->pc = NNN(instruction) + cpu->cpureg_V[0];
         break;
 
     // Set VX to a random number with a mask of NN
     case 0x0C: // CXNN
-
+        cpu->cpureg_V[Nibble2(instruction)] = (uint8_t)(rand() % 256) & NN(instruction);
         break;
 
-    /*
-        Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
-        Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
-    */
+    // Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
+    // Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
     case 0x0D: // DXYN
+        for (uint8_t y = Nibble3(instruction); y < Nibble4(instruction) + 1; y++)
+        {
+            for (uint8_t x = Nibble2(instruction), i = 0; x < 8; x++)
+            {
+                //(((0x90 >> i) & 0x01) > 0) ? '1' : '0';
+            }
+        }
+
 
         break;
 
     case 0x0E:
+        // Skip the following instruction if the key corresponding to the hex value currently stored in register VX is pressed
         if ((uint8_t)(instruction & 0x00FF) == 0x9E) // EX9E
         {
             //
         }
+
+        // Skip the following instruction if the key corresponding to the hex value currently stored in register VX is not pressed
         else if ((uint8_t)(instruction & 0x00FF) == 0xA1) // EXA1
         {
             //
@@ -227,10 +228,11 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         break;
 
     case 0x0F:
-        switch ((uint8_t)(instruction & 0x00FF))
+        switch (NN(instruction))
         {
         // Store the current value of the delay timer in register VX
         case 0x07: // FX07
+            cpu->delay_timer = cpu->cpureg_V[Nibble2(instruction)];
             break;
 
         // Wait for a keypress and store the result in register VX
@@ -239,49 +241,45 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
         // Set the delay timer to the value of register VX
         case 0x15: // FX15
-            cpu->delay_timer = cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)];
+            cpu->delay_timer = cpu->cpureg_V[Nibble2(instruction)];
             break;
 
         // Set the sound timer to the value of register VX
         case 0x18: // FX18
-            cpu->sound_timer = cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)];
+            cpu->sound_timer = cpu->cpureg_V[Nibble2(instruction)];
             break;
 
         // Add the value stored in register VX to register I
         case 0x1E: // FX1E
-            cpu->cpureg_I += cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)];
+            cpu->cpureg_I += cpu->cpureg_V[Nibble2(instruction)];
             break;
 
         // Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
         case 0x29: // FX29
-            cpu->cpureg_I = FONT_TABLE_OFFSET + ((uint8_t)((instruction & 0x0F00) >> 8) * 5);
+            cpu->cpureg_I = FONT_TABLE_OFFSET + (Nibble2(instruction) * 5);
             break;
 
         // Store the binary-coded decimal equivalent of the value stored in register VX at addresses I, I + 1, and I + 2
         case 0x33: // FX33
-            cpu->memory[cpu->cpureg_I] = (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] % 1000) / 100;
-            cpu->memory[cpu->cpureg_I + 1] = (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] % 100) / 10;
-            cpu->memory[cpu->cpureg_I + 2] = (cpu->cpureg_V[(uint8_t)((instruction & 0x0F00) >> 8)] % 10);
+            cpu->memory[cpu->cpureg_I] = (cpu->cpureg_V[Nibble2(instruction)] % 1000) / 100;
+            cpu->memory[cpu->cpureg_I + 1] = (cpu->cpureg_V[Nibble2(instruction)] % 100) / 10;
+            cpu->memory[cpu->cpureg_I + 2] = (cpu->cpureg_V[Nibble2(instruction)] % 10);
             break;
 
-        /*
-            Store the values of registers V0 to VX inclusive in memory starting at address I
-            I is set to I + X + 1 after operation²
-        */
+        // Store the values of registers V0 to VX inclusive in memory starting at address I
+        // I is set to I + X + 1 after operation²
         case 0x55: // FX55
-            for (uint8_t i = 0; i < (uint8_t)((instruction & 0x0F00) >> 8); i++)
+            for (uint8_t i = 0; i < Nibble2(instruction); i++)
             {
                 cpu->memory[cpu->cpureg_I] = cpu->cpureg_V[i];
                 cpu->cpureg_I++;
             }
             break;
 
-        /*
-            Fill registers V0 to VX inclusive with the values stored in memory starting at address I
-            I is set to I + X + 1 after operation²
-        */
+        // Fill registers V0 to VX inclusive with the values stored in memory starting at address I
+        // I is set to I + X + 1 after operation²
         case 0x65: // FX65
-            for (uint8_t i = 0; i < (uint8_t)((instruction & 0x0F00) >> 8); i++)
+            for (uint8_t i = 0; i < Nibble2(instruction); i++)
             {
                 cpu->cpureg_V[i] = cpu->memory[cpu->cpureg_I];
                 cpu->cpureg_I++;
@@ -293,9 +291,11 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
     default:
         // Default error handling
         cpu->pc = cpu->pc; // Do something cause unimplemented
+        printf("unknown instruction %X\n", instruction);
     }
 
-    switch ((uint8_t)((instruction & 0xF000) >> 12))
+    // Check instruction types, skip PC increment if jump type
+    switch (Nibble1(instruction))
     {
     case 0x00:
     case 0x01:
@@ -310,7 +310,6 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
 void Chip8_ClearScreen(struct chip8_cpu *cpu)
 {
-    // memset(cpu->screen, 0, sizeof(cpu->screen));
     for (uint16_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
     {
         cpu->screen[i] = 0;

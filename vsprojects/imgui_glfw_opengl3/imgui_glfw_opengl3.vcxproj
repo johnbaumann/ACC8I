@@ -101,6 +101,8 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\thirdparty\imgui;..\..\thirdparty\imgui\backends;..\..\thirdparty\imgui\examples\libs\glfw\include;..\..\thirdparty\imgui\examples\libs\gl3w;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -138,6 +140,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\thirdparty\imgui;..\..\thirdparty\imgui\backends;..\..\thirdparty\imgui\examples\libs\glfw\include;..\..\thirdparty\imgui\examples\libs\gl3w;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <LanguageStandard>Default</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -151,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\..\thirdparty\imgui\imgui.cpp" />
     <ClCompile Include="..\..\thirdparty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\..\thirdparty\imgui\imgui_tables.cpp" />
@@ -160,6 +165,7 @@
     <ClCompile Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="..\..\thirdparty\imgui\imconfig.h" />
     <ClInclude Include="..\..\thirdparty\imgui\imgui.h" />
     <ClInclude Include="..\..\thirdparty\imgui\imgui_internal.h" />
@@ -167,6 +173,7 @@
     <ClInclude Include="..\..\thirdparty\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\glcorearb.h" />
+    <ClInclude Include="..\..\thirdparty\imgui_club\imgui_memory_editor\imgui_memory_editor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\thirdparty\imgui\misc\debuggers\imgui.natvis" />

@@ -11,6 +11,12 @@
     <Filter Include="gl3w">
       <UniqueIdentifier>{42f99867-3108-43b8-99d0-fabefaf1f2e3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="widgets">
+      <UniqueIdentifier>{509fa172-3bbd-4437-8a15-b694839831b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="widgets\ImFileDialog">
+      <UniqueIdentifier>{32414d7e-f106-4825-8c6d-06bacd647207}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\thirdparty\imgui\imgui.cpp">
@@ -34,6 +40,9 @@
     <ClCompile Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.c">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\ImGuiFileDialog\ImGuiFileDialog.cpp">
+      <Filter>widgets\ImFileDialog</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\imgui\imconfig.h" />
@@ -43,6 +52,12 @@
     <ClInclude Include="..\..\thirdparty\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="..\..\thirdparty\imgui\examples\libs\gl3w\GL\glcorearb.h" />
+    <ClInclude Include="..\..\thirdparty\imgui_club\imgui_memory_editor\imgui_memory_editor.h">
+      <Filter>widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\ImGuiFileDialog\ImGuiFileDialog.h">
+      <Filter>widgets\ImFileDialog</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\thirdparty\imgui\misc\debuggers\imgui.natvis" />

@@ -8,7 +8,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)thirdparty\imgui;$(SolutionDir)thirdparty\imgui\backends;$(SolutionDir)thirdparty\imgui\examples\libs\gl3w;$(SolutionDir)thirdparty\imgui\examples\libs\glfw\include;$(SolutionDir)thirdparty\imgui\misc\cpp;$(SolutionDir)thirdparty\imgui_club;$(SolutionDir)thirdparty\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)thirdparty\imgui;$(SolutionDir)thirdparty\imgui\backends;$(SolutionDir)thirdparty\imgui\examples\libs\gl3w;$(SolutionDir)thirdparty\imgui\examples\libs\glfw\include;$(SolutionDir)thirdparty\imgui\misc\cpp;$(SolutionDir)thirdparty\imgui_club\imgui_memory_editor;$(SolutionDir)thirdparty\ImGuiFileDialog;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
