@@ -6,4 +6,4 @@
 	url = https://github.com/ocornut/imgui_club.git
 [submodule "thirdparty/ImGuiFileDialog"]
 	path = thirdparty/ImGuiFileDialog
-	url = https://github.com/aiekick/ImGuiFileDialog.git
+	url = https://github.com/aiekick/ImGuiFileDialog.git	
