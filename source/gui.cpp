@@ -187,6 +187,7 @@ void GUI_DrawMainWindowMenu()
 
 void GUI_DrawRenderWindow()
 {
+    char LineOut[(SCREEN_WIDTH * SCREEN_HEIGHT)+1];
     if (gui_windowstates.show_render_window)
     {
         //ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
@@ -194,7 +195,18 @@ void GUI_DrawRenderWindow()
 
         if (ImGui::Begin("Video Out", &gui_windowstates.show_render_window, child_window_flags))
         {
-            ImGui::Text("Hello display");
+            for (uint8_t y = 0; y < SCREEN_HEIGHT; y++)
+            {
+                ImGui::NewLine();
+                for (uint8_t x = 0; x < SCREEN_WIDTH; x++)
+                {
+                    LineOut[x] = (c8_cpu.screen[y * SCREEN_WIDTH + x] > 0) ? '1' : '0';
+                    //ScreenOut[y * SCREEN_WIDTH + x] = c8_cpu.screen[y * SCREEN_WIDTH + x];
+                }
+                LineOut[SCREEN_WIDTH] = '\0';
+                ImGui::SameLine();
+                ImGui::Text("%s", LineOut);
+            }
 
             ImGui::End();
         }

@@ -44,6 +44,16 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 {
     uint16_t instruction = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc + 1];
 
+    // Used for stepping through individual bits when drawing
+    uint8_t bit_iterator;
+    
+    // Used for stepping through sprite memory when drawing
+    uint16_t memory_iterator;
+    
+    // Used for math operations. Could re-use memory_iterator to save 2 bytes of RAM.
+    uint16_t math_accumulator;
+    
+
     switch (Nibble1(instruction))
     {
     case 0x00:
@@ -64,17 +74,17 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         }
         break;
 
-    case 0x01:
+    case 0x01: // 1NNN
         // Jump to address NNN
         cpu->pc = NNN(instruction);
         break;
 
-    case 0x02:
+    case 0x02: // 2NNN
         // Execute subroutine starting at address NNN
         Chip8_JumpToSubRoutine(cpu, NNN(instruction));
         break;
 
-    case 0x03:
+    case 0x03: // 3XNN
         // Skip the following instruction if the value of register VX equals NN
         if (cpu->cpureg_V[Nibble2(instruction)] == NN(instruction))
         {
@@ -82,7 +92,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         }
         break;
 
-    case 0x04:
+    case 0x04: // 4XNN
         // Skip the following instruction if the value of register VX is not equal to NN
         if (cpu->cpureg_V[Nibble2(instruction)] != NN(instruction))
         {
@@ -90,7 +100,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         }
         break;
 
-    case 0x05:
+    case 0x05: // 5XY0
         // Skip the following instruction if the value of register VX is equal to the value of register VY
         if (cpu->cpureg_V[Nibble2(instruction)] == cpu->cpureg_V[Nibble3(instruction)])
         {
@@ -103,12 +113,12 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         cpu->cpureg_V[Nibble2(instruction)] = NN(instruction);
         break;
 
-    case 0x07:
+    case 0x07: // 7XNN
         // Add the value NN to register VX
         cpu->cpureg_V[Nibble2(instruction)] += NN(instruction);
         break;
 
-    case 0x08:
+    case 0x08: // 8---
         switch (Nibble4(instruction))
         {
         // Store the value of register VY in register VX
@@ -136,19 +146,33 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         // Set VF to 01 if a carry occurs
         // Set VF to 00 if a carry does not occur
         case 0x04: // 8XY4
+            math_accumulator = cpu->cpureg_V[Nibble2(instruction)] + cpu->cpureg_V[Nibble3(instruction)];
+            if (math_accumulator > 0xFF)
+                cpu->cpureg_V[0x0F] = 1;
+            else
+                cpu->cpureg_V[0x0F] = 0;
+
+            cpu->cpureg_V[Nibble2(instruction)] = (uint8_t)(math_accumulator & 0x00FF);
             break;
 
         // Subtract the value of register VY from register VX
         // Set VF to 00 if a borrow occurs
         // Set VF to 01 if a borrow does not occur
         case 0x05: // 8XY5
+            math_accumulator = cpu->cpureg_V[Nibble2(instruction)] - cpu->cpureg_V[Nibble3(instruction)];
+            if (math_accumulator > 0xFF)
+                cpu->cpureg_V[0x0F] = 1;
+            else
+                cpu->cpureg_V[0x0F] = 0;
+
+            cpu->cpureg_V[Nibble2(instruction)] = (uint8_t)(math_accumulator & 0x00FF);
             break;
 
         // Store the value of register VY shifted right one bit in register VX¹
         // Set register VF to the least significant bit prior to the shift
         // VY is unchanged
         case 0x06: // 8XY6
-            cpu->cpureg_V[0x0F] = (uint8_t)(instruction & 0x01);
+            cpu->cpureg_V[0x0F] = (uint8_t)(cpu->cpureg_V[Nibble2(instruction)] & 0x01);
             cpu->cpureg_V[Nibble2(instruction)] = cpu->cpureg_V[Nibble3(instruction)] >> 1;
             break;
 
@@ -162,7 +186,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
         // Set register VF to the most significant bit prior to the shift
         // VY is unchanged
         case 0x0E: // 8XYE
-            cpu->cpureg_V[0x0F] = (uint8_t)((instruction & 0x80) >> 7);
+            cpu->cpureg_V[0x0F] = (uint8_t)((cpu->cpureg_V[Nibble2(instruction)] & 0x80) >> 7);
             cpu->cpureg_V[Nibble2(instruction)] = cpu->cpureg_V[Nibble3(instruction)] << 1;
             break;
 
@@ -197,28 +221,40 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
     // Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
     // Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
     case 0x0D: // DXYN
-        for (uint8_t y = Nibble3(instruction); y < Nibble4(instruction) + 1; y++)
+        memory_iterator = cpu->cpureg_I;
+        bit_iterator = 7;
+        for (uint8_t y = cpu->cpureg_V[Nibble3(instruction)]; y - cpu->cpureg_V[Nibble3(instruction)] < Nibble4(instruction); y++)
         {
-            for (uint8_t x = Nibble2(instruction), i = 0; x < 8; x++)
+            for (uint8_t x = cpu->cpureg_V[Nibble2(instruction)]; x - cpu->cpureg_V[Nibble2(instruction)] < 8; x++)
             {
-                //(((0x90 >> i) & 0x01) > 0) ? '1' : '0';
+                cpu->screen[y * SCREEN_WIDTH + x] = ((cpu->memory[memory_iterator] >> bit_iterator) & 1U) > 0 ? true : false;
+                //cpu->screen[y * SCREEN_WIDTH + x] = 1;
+                if (bit_iterator == 0)
+                {
+                    bit_iterator = 7;
+                    memory_iterator++;
+                }
+                else
+                {
+                    bit_iterator--;
+                }
             }
         }
-
-
         break;
 
     case 0x0E:
         // Skip the following instruction if the key corresponding to the hex value currently stored in register VX is pressed
         if ((uint8_t)(instruction & 0x00FF) == 0x9E) // EX9E
         {
-            //
+            //if(KeyPressed())
+                //cpu->pc += 2;
         }
 
         // Skip the following instruction if the key corresponding to the hex value currently stored in register VX is not pressed
         else if ((uint8_t)(instruction & 0x00FF) == 0xA1) // EXA1
         {
-            //
+            //if(!KeyPressed())
+                cpu->pc += 2;
         }
         else
         {
@@ -298,6 +334,10 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
     switch (Nibble1(instruction))
     {
     case 0x00:
+        // Bad code flow
+        // Increment pc on clear screen and return from sub-routine
+        if (Nibble3(instruction) == 0x0E)
+            cpu->pc += 2;
     case 0x01:
     case 0x02:
     case 0x0B:
@@ -316,42 +356,45 @@ void Chip8_ClearScreen(struct chip8_cpu *cpu)
     }
 }
 
-void Chip8_JumpToSubRoutine(struct chip8_cpu *cpu, uint16_t address)
+static void Chip8_JumpToSubRoutine(struct chip8_cpu *cpu, uint16_t address)
 {
     // Push pc to stack
     Chip8_StackPush(cpu, cpu->pc);
     cpu->pc = address;
 }
 
-void Chip8_ReturnFromSubRoutine(struct chip8_cpu *cpu)
+static void Chip8_ReturnFromSubRoutine(struct chip8_cpu *cpu)
 {
     // Pull pc from stack
     cpu->pc = Chip8_StackPop(cpu);
 }
 
-uint16_t Chip8_StackPop(struct chip8_cpu *cpu)
+static uint16_t Chip8_StackPop(struct chip8_cpu *cpu)
 {
-    if (cpu->stack_count <= 0)
+    uint16_t stack_value;
+
+    if (cpu->stack_count == 0)
     {
-        // Stack under-flow condition
-        //printf("Error: Stack Underflow\n");
-        //cpu->stack_count = 0;
+        // Stack under-flow condition, return
+        stack_value = 0x200;
+    }
+    else
+    {
+        stack_value = cpu->stack[cpu->stack_count - 1];
+        cpu->stack_count--;
     }
 
-    uint16_t value = cpu->stack[cpu->stack_count - 1];
-    cpu->stack_count--;
-
-    return value;
+    return stack_value;
 }
 
-void Chip8_StackPush(struct chip8_cpu *cpu, uint16_t value)
+static void Chip8_StackPush(struct chip8_cpu *cpu, uint16_t value)
 {
     cpu->stack_count++;
     if (cpu->stack_count >= STACK_SIZE)
     {
         // Stack over-flow condition
         //printf("Error: Stack Overflow\n");
-        cpu->stack_count = 0;
+        cpu->stack_count = 1;
     }
-    cpu->stack[cpu->stack_count] = value;
+    cpu->stack[cpu->stack_count-1] = value;
 }

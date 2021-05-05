@@ -12,22 +12,7 @@ extern "C" {
 #define SCREEN_HEIGHT 32
 #define RESERVED_RAM 512
 #define FONT_TABLE_OFFSET 432
-#define STACK_SIZE 16
-
-
-	// Repeat after me; macros are bad, mkay.
-
-	// Nibbles ordered left to right for ease of reading
-	//#define Nibble1(x)  (uint8_t)((x & 0xF000) >> 12)
-	//#define Nibble2(x)  (uint8_t)((x & 0x0F00) >> 8)
-	//#define Nibble3(x)  (uint8_t)((x & 0x00F0) >> 4)
-	//#define Nibble4(x)  (uint8_t)(x & 0x000F)
-
-
-	//#define N(x)    (uint8_t)(x & 0x000F)
-	//#define NN(x)   (uint8_t)(x & 0x00FF)
-	//#define NNN(x)  (uint16_t)(x & 0x0FFF)
-
+#define STACK_SIZE 12
 
 	// Returns the first nibble from the left of a 16-bit unsigned integer.
 	inline uint8_t Nibble1(uint16_t instruction)
@@ -118,10 +103,10 @@ extern "C" {
 	void Chip8_Initialize(struct chip8_cpu*);
 	void Chip8_TickCPU(struct chip8_cpu*);
 	void Chip8_ClearScreen(struct chip8_cpu*);
-	void Chip8_JumpToSubRoutine(struct chip8_cpu*, uint16_t);
-	void Chip8_ReturnFromSubRoutine(struct chip8_cpu*);
-	uint16_t Chip8_StackPop(struct chip8_cpu*);
-	void Chip8_StackPush(struct chip8_cpu*, uint16_t);
+	static void Chip8_JumpToSubRoutine(struct chip8_cpu*, uint16_t);
+	static void Chip8_ReturnFromSubRoutine(struct chip8_cpu*);
+	static uint16_t Chip8_StackPop(struct chip8_cpu*);
+	static void Chip8_StackPush(struct chip8_cpu*, uint16_t);
 
 	extern struct chip8_cpu c8_cpu;
 
