@@ -5,60 +5,27 @@
 
 #include "cpu.h"
 #include "gui.h"
-#include <iostream>
-
 
 
 int main(int, char**)
 {
 	bool program_running = true;
-	long file_size;
 
 	if (GUI_Init() > 0)
 		return -1;
 
 	Chip8_Initialize(&c8_cpu);
+	//OpenROM("thirdparty\\chip8-roms\\programs\\BMP Viewer - Hello (C8 example) [Hap, 2005].ch8");
 
-	FILE* inFile = fopen("E:\\CHIP8\\test_opcode.ch8", "rb");
-	if (inFile == NULL)
+
+	// Main loop
+	while (program_running)
 	{
-		printf("Error opening file!\n");
-		return -1;
+		if (!GUI_Render())
+			break;
 	}
-	else
-	{
-		fseek(inFile, 0, SEEK_END);
-		file_size = ftell(inFile);
-		if (file_size > 3583)
-		{
-			printf("File size too large\n");
-			return -1;
-		}
-		else if (file_size <= 0)
-		{
-			printf("File is empty\n");
-			return -1;
-		}
-		rewind(inFile);
 
-		//while (ftell(inFile) < file_size)
-		for (int i = 0; i < file_size; i++)
-		{
-			int data_in = fgetc(inFile);
-			if (data_in == EOF)
-				break;
-			c8_cpu.memory[i + 0x200] = (uint8_t)data_in;
-		}
+	GUI_Closing();
 
-		// Main loop
-		while (program_running)
-		{
-			if (!GUI_Render())
-				break;
-		}
-
-		GUI_Closing();
-
-		return 0;
-	}
+	return 0;
 }

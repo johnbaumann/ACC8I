@@ -6,4 +6,10 @@
 	url = https://github.com/ocornut/imgui_club.git
 [submodule "thirdparty/ImGuiFileDialog"]
 	path = thirdparty/ImGuiFileDialog
-	url = https://github.com/aiekick/ImGuiFileDialog.git	
+	url = https://github.com/aiekick/ImGuiFileDialog.git
+[submodule "thirdparty/chip8-roms"]
+	path = thirdparty/chip8-roms
+	url = https://github.com/kripod/chip8-roms.git
+[submodule "thirdparty/chip8-test-rom"]
+	path = thirdpaty/chip8-test-rom
+	url = https://github.com/corax89/chip8-test-rom.git

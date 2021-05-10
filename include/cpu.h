@@ -98,6 +98,8 @@ extern "C" {
 
 		// Program Counter
 		uint16_t pc;
+
+		bool cpu_halted;
 	};
 
 	void Chip8_Initialize(struct chip8_cpu*);
