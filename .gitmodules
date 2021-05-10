@@ -11,5 +11,5 @@
 	path = thirdparty/chip8-roms
 	url = https://github.com/kripod/chip8-roms.git
 [submodule "thirdparty/chip8-test-rom"]
-	path = thirdpaty/chip8-test-rom
+	path = thirdparty/chip8-test-rom
 	url = https://github.com/corax89/chip8-test-rom.git
