@@ -13,27 +13,45 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\windows">
+      <UniqueIdentifier>{27db45ea-a6b6-430e-8f98-1e842f4d4277}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared">
+      <UniqueIdentifier>{13aa0392-836d-4e77-bbf3-221981a799ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared">
+      <UniqueIdentifier>{e4b6f44c-0da9-4159-94c7-8bee1fe1ecdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\windows">
+      <UniqueIdentifier>{8375c4d5-0ef3-4e83-8206-3548dc43fda0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\cpu.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\shared\chip8_cpu.c">
+      <Filter>Source Files\shared</Filter>
     </ClCompile>
-    <ClCompile Include="source\main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\shared\cpu_impl_rng.c">
+      <Filter>Source Files\shared</Filter>
     </ClCompile>
-    <ClCompile Include="source\gui.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\windows\main.cpp">
+      <Filter>Source Files\windows</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\cpu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\gui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClCompile Include="source\windows\gui.cpp">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\windows\stb_image.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="include\windows\gui.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="include\shared\chip8_cpu.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

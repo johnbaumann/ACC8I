@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <iostream>
 
-#include "gui.h"
-#include "cpu.h"
+#include "windows/gui.h"
+#include "shared/chip8_cpu.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -12,7 +12,7 @@
 
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "windows/stb_image.h"
 
 //bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height);
 
@@ -146,7 +146,11 @@ int8_t OpenROM(const char *filename)
 
 	bool GUI_DrawAllWindows()
 	{
-		uint32_t cycles_to_execute = 500 / ImGui::GetIO().Framerate;
+		uint32_t cycles_to_execute;
+		
+		// Tick CPU
+		// 500Hz
+		cycles_to_execute = 500 / ImGui::GetIO().Framerate;
 		if (cycles_to_execute == 0)
 			cycles_to_execute = 1;
 
@@ -157,6 +161,23 @@ int8_t OpenROM(const char *filename)
 				Chip8_TickCPU(&c8_cpu);
 			}
 		}
+		// Tick CPU
+
+		// Delay and Sound Timers
+		// 60Hz
+		cycles_to_execute = 60 / ImGui::GetIO().Framerate;
+		if (cycles_to_execute == 0)
+			cycles_to_execute = 1;
+
+		if (!c8_cpu.cpu_halted)
+		{
+			for (uint32_t i = 0; i < cycles_to_execute; i++)
+			{
+				Chip8_UpdateTimers(&c8_cpu);
+			}
+		}
+		// Delay and Sound Timers
+
 
 		ScreenToTexture(&c8_cpu, &my_image_texture);
 
@@ -268,7 +289,7 @@ int8_t OpenROM(const char *filename)
 
 		if (gui_windowstates.show_render_window)
 		{
-			ImGui::SetNextWindowSizeConstraints(ImVec2(SCREEN_WIDTH + 70, SCREEN_HEIGHT + 35), ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::TwoToOneRatio);
+			ImGui::SetNextWindowSizeConstraints(ImVec2(CHIP8_SCREEN_WIDTH + 70, CHIP8_SCREEN_HEIGHT + 35), ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::TwoToOneRatio);
 			
 			if (ImGui::Begin("Video Out", &gui_windowstates.show_render_window, child_window_flags))
 			{
@@ -380,7 +401,7 @@ int8_t OpenROM(const char *filename)
 
 
 		//bool ret = LoadTextureFromFile("MyImage01.jpg", &my_image_texture, &my_image_width, &my_image_height);
-		screen_data_buffer = (unsigned char*)malloc(SCREEN_WIDTH * SCREEN_HEIGHT * 3);
+		screen_data_buffer = (unsigned char*)malloc(CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT * 3);
 		glGenTextures(1, &screen_texture);
 
 		return 0;
@@ -462,7 +483,7 @@ int8_t OpenROM(const char *filename)
 	{
 		if (screen_data_buffer != NULL)
 		{
-			for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
+			for (int i = 0; i < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT; i++)
 			{
 				int index = i * 3;
 
@@ -487,7 +508,7 @@ int8_t OpenROM(const char *filename)
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, screen_data_buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP8_SCREEN_WIDTH, CHIP8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, screen_data_buffer);
 
 		*out_texture = screen_texture;
 

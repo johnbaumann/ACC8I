@@ -6,13 +6,17 @@
 *.sln.docstates
 *.userprefs
 
-Win32/
-x64/
-Debug/
-Release/
+thirdparty/psyq/*
+Win32
+x64
+
+build/ps1/*.elf
+build/ps1/*.ps-exe
+build/ps1/*.map
+*.o
+*.dep
 
 .vs/
-
 vsprojects/packages
 
 imgui.ini

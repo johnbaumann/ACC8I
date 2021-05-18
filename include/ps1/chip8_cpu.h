@@ -1,5 +1,5 @@
-#ifndef CPU_H_
-#define CPU_H_
+#ifndef CHIP8_CPU_H_
+#define CHIP8_CPU_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,11 +8,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SCREEN_WIDTH 64
-#define SCREEN_HEIGHT 32
-#define RESERVED_RAM 512
-#define FONT_TABLE_OFFSET 432
-#define STACK_SIZE 12
+#define CHIP8_SCREEN_WIDTH 64
+#define CHIP8_SCREEN_HEIGHT 32
+#define CHIP8_RESERVED_RAM 512
+#define CHIP8_FONT_TABLE_OFFSET 432
+#define CHIP8_STACK_SIZE 12
 
 	// Returns the first nibble from the left of a 16-bit unsigned integer.
 	inline uint8_t Nibble1(uint16_t instruction)
@@ -53,27 +53,6 @@ extern "C" {
 		return (uint16_t)(instruction & 0x0FFF);
 	}
 
-	// Graphics Data
-	const uint8_t font_table[80] =
-	{
-		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-		0x20, 0x60, 0x20, 0x20, 0x70, // 1
-		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-	};
-
 	struct chip8_cpu
 	{
 		// RAM
@@ -85,7 +64,7 @@ extern "C" {
 		uint16_t cpureg_I;
 
 		// Stack
-		uint16_t stack[STACK_SIZE];
+		uint16_t stack[CHIP8_STACK_SIZE];
 		int8_t stack_count;
 
 		// Delay timer
@@ -94,7 +73,7 @@ extern "C" {
 		uint8_t sound_timer;
 
 		// Display
-		bool screen[SCREEN_WIDTH * SCREEN_HEIGHT];
+		bool screen[CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT];
 
 		// Program Counter
 		uint16_t pc;
@@ -110,11 +89,15 @@ extern "C" {
 	static uint16_t Chip8_StackPop(struct chip8_cpu*);
 	static void Chip8_StackPush(struct chip8_cpu*, uint16_t);
 
+	
+	// Platform dependent, implement per system.
+	uint8_t Chip8_RandomNumber();
+	void Chip8_SeedRNG();
+
 	extern struct chip8_cpu c8_cpu;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CPU_H_
-
+#endif // CHIP8_CPU_H_

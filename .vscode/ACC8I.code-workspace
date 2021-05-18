@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "..\\.vscode"
+		},
+		{
+			"path": "..\\include"
+		},
+		{
+			"path": "..\\source",
+			"name": "source"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"windows": true,
+			"**/*.o": true,
+			"**/*.dep": true
+		},
+		"C_Cpp.default.includePath": [
+			"${workspaceFolder}/../thirdparty/psyq/include",
+			"${workspaceFolder}/../include"
+		],
+		"C_Cpp.default.defines": [],
+		"C_Cpp.default.cStandard": "c11",
+		"C_Cpp.default.cppStandard": "c++17",
+		"files.associations": {
+			"libetc.h": "c",
+			"stdint.h": "c"
+		}
+	}
+}
