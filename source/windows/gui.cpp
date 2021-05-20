@@ -63,6 +63,8 @@ GLuint my_image_texture = 0;
 unsigned char* screen_data_buffer;
 GLuint screen_texture;
 
+bool cpu_auto_tick = true;
+
 
 static bool use_work_area = false;
 static ImGuiWindowFlags main_window_flags;
@@ -84,13 +86,15 @@ static void glfw_error_callback(int error, const char* description)
 
 struct GUI_WindowStates
 {
-	bool show_register_window = true;
+
+	bool show_keypad_window = true;
 	bool show_memory_editor_window = false;
+	bool show_register_window = true;
 	bool show_render_window = true;
 } gui_windowstates;
 
 
-int8_t OpenROM(const char *filename)
+int8_t OpenROM(const char* filename)
 {
 	FILE* inFile = fopen(filename, "rb");
 	long file_size;
@@ -130,387 +134,564 @@ int8_t OpenROM(const char *filename)
 	return 0;
 }
 
+void run_cpu_cycles()
+{
+	uint32_t cycles_to_execute;
+	// Tick CPU
+	// 500Hz
+	cycles_to_execute = 500 / ImGui::GetIO().Framerate;
+	if (cycles_to_execute == 0)
+		cycles_to_execute = 1;
 
-	void GUI_Closing()
+	if (!c8_cpu.cpu_halted)
 	{
-		// Cleanup
-		free(screen_data_buffer);
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+		for (uint32_t i = 0; i < cycles_to_execute; i++)
+		{
+			Chip8_TickCPU(&c8_cpu);
+		}
+	}
+	// Tick CPU
 
-		glfwDestroyWindow(window);
-		glfwTerminate();
+	// Delay and Sound Timers
+	// 60Hz
+	cycles_to_execute = 60 / ImGui::GetIO().Framerate;
+	if (cycles_to_execute == 0)
+		cycles_to_execute = 1;
+
+	if (!c8_cpu.cpu_halted)
+	{
+		for (uint32_t i = 0; i < cycles_to_execute; i++)
+		{
+			Chip8_UpdateTimers(&c8_cpu);
+		}
+	}
+	// Delay and Sound Timers
+}
+
+
+void GUI_Closing()
+{
+	// Cleanup
+	free(screen_data_buffer);
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
+
+
+bool GUI_DrawAllWindows()
+{
+
+
+	if (cpu_auto_tick)
+	{
+		run_cpu_cycles();
 	}
 
 
-	bool GUI_DrawAllWindows()
+	ScreenToTexture(&c8_cpu, &my_image_texture);
+
+	bool bProgramRunning = GUI_DrawMainWindowMenu();
+	GUI_DrawKeyPadWindow();
+	GUI_DrawRegisterWindow();
+	GUI_DrawMemoryEditorWindow();
+	GUI_DrawRenderWindow();
+
+	GUI_DrawFileDialog();
+
+	return bProgramRunning;
+}
+
+void GUI_DrawFileDialog()
+{
+	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(320, 180), ImGui::GetMainViewport()->Size))
 	{
-		uint32_t cycles_to_execute;
-		
-		// Tick CPU
-		// 500Hz
-		cycles_to_execute = 500 / ImGui::GetIO().Framerate;
-		if (cycles_to_execute == 0)
-			cycles_to_execute = 1;
-
-		if (!c8_cpu.cpu_halted)
+		// action if OK
+		if (ImGuiFileDialog::Instance()->IsOk())
 		{
-			for (uint32_t i = 0; i < cycles_to_execute; i++)
-			{
-				Chip8_TickCPU(&c8_cpu);
-			}
+			Chip8_Initialize(&c8_cpu);
+			OpenROM(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
 		}
-		// Tick CPU
 
-		// Delay and Sound Timers
-		// 60Hz
-		cycles_to_execute = 60 / ImGui::GetIO().Framerate;
-		if (cycles_to_execute == 0)
-			cycles_to_execute = 1;
-
-		if (!c8_cpu.cpu_halted)
-		{
-			for (uint32_t i = 0; i < cycles_to_execute; i++)
-			{
-				Chip8_UpdateTimers(&c8_cpu);
-			}
-		}
-		// Delay and Sound Timers
-
-
-		ScreenToTexture(&c8_cpu, &my_image_texture);
-
-		bool bProgramRunning = GUI_DrawMainWindowMenu();
-		GUI_DrawRegisterWindow();
-		GUI_DrawMemoryEditorWindow();
-		GUI_DrawRenderWindow();
-
-		GUI_DrawFileDialog();
-
-		return bProgramRunning;
+		// close
+		ImGuiFileDialog::Instance()->Close();
 	}
+}
 
-	void GUI_DrawFileDialog()
+void GUI_DrawKeyPadWindow()
+{
+	if (gui_windowstates.show_keypad_window)
 	{
-		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(320, 180), ImGui::GetMainViewport()->Size))
+		if (ImGui::Begin("Keypad", &gui_windowstates.show_keypad_window, child_window_flags))
 		{
-			// action if OK
-			if (ImGuiFileDialog::Instance()->IsOk())
+			// Row 1
+			if (ImGui::Button("1"))
 			{
-				Chip8_Initialize(&c8_cpu);
-				OpenROM(ImGuiFileDialog::Instance()->GetFilePathName().c_str());
-			}
-
-			// close
-			ImGuiFileDialog::Instance()->Close();
-		}
-	}
-
-	void GUI_DrawMemoryEditorWindow()
-	{
-		if (gui_windowstates.show_memory_editor_window)
-		{
-			ImGui::SetNextWindowPos(ImVec2(50, 30), ImGuiCond_FirstUseEver);
-			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-			mem_edit.DrawWindow("Memory Editor", c8_cpu.memory, sizeof(c8_cpu.memory));
-			gui_windowstates.show_memory_editor_window = mem_edit.Open;
-		}
-	}
-
-	void GUI_DrawRegisterWindow()
-	{
-		if (gui_windowstates.show_register_window)
-		{
-			ImGui::SetNextWindowPos(ImVec2(50, 30), ImGuiCond_FirstUseEver);
-			ImGui::SetNextWindowSize(ImVec2(320, 240), ImGuiCond_FirstUseEver);
-
-			if (ImGui::Begin("Registers", &gui_windowstates.show_register_window, child_window_flags))
-			{
-				ImGui::Text("PC = %i, 0x%X", c8_cpu.pc, c8_cpu.pc);
-				ImGui::Text("Instruction = %X", c8_cpu.memory[c8_cpu.pc] << 8 | c8_cpu.memory[c8_cpu.pc + 1]);
-				if (ImGui::Button("Tick"))
-				{
-					Chip8_TickCPU(&c8_cpu);
-				}
-				if (ImGui::CollapsingHeader("V"))
-				{
-					for (int v = 0; v < 16; v++)
-					{
-						ImGui::Text("V%X: %i, 0x%X", v, c8_cpu.cpureg_V[v], c8_cpu.cpureg_V[v]);
-					}
-				}
-				ImGui::Text("I: %i, 0x%X", c8_cpu.cpureg_I, c8_cpu.cpureg_I);
-				ImGui::End();
+				Chip8_KeyPressed(&c8_cpu, 0x01);
 			}
 			else
 			{
-				ImGui::End();
+				Chip8_KeyReleased(&c8_cpu, 0x01);
 			}
-		}
-	}
-
-	bool GUI_DrawMainWindowMenu()
-	{
-		bool bProgramRunning = true;
-
-		if (ImGui::BeginMainMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
+			ImGui::SameLine();
+			if (ImGui::Button("2"))
 			{
-				if (ImGui::MenuItem("Open..", "Ctrl+O"))
-				{
-					ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ch8", ".");
-				}
-				if (ImGui::MenuItem("Close", "Ctrl+W")) { Chip8_Initialize(&c8_cpu); }
-				if (ImGui::MenuItem("Exit", "Alt+F4")) { bProgramRunning = false; }
-				ImGui::EndMenu();
+				Chip8_KeyPressed(&c8_cpu, 0x02);
 			}
-			if (ImGui::BeginMenu("View"))
+			else
 			{
-				ImGui::MenuItem("Registers", NULL, &gui_windowstates.show_register_window);
-				ImGui::MenuItem("Memory Editor", NULL, &gui_windowstates.show_memory_editor_window);
-				ImGui::MenuItem("Video Out", NULL, &gui_windowstates.show_render_window);
-				ImGui::EndMenu();
+				Chip8_KeyReleased(&c8_cpu, 0x02);
 			}
-			ImGui::EndMainMenuBar();
+			ImGui::SameLine();
+			if (ImGui::Button("3"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x03);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x03);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("C"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0C);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0C);
+			}
+
+			// Row 2
+			if (ImGui::Button("4"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x04);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x04);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("5"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x05);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x05);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("6"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x06);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x06);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("D"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0D);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0D);
+			}
+
+			// Row 3
+			if (ImGui::Button("7"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x07);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x07);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("8"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x08);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x08);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("9"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x09);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x09);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("E"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0E);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0E);
+			}
+
+			// New Row
+			if (ImGui::Button("A"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0A);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0A);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("0"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x00);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x00);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("B"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0B);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0B);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("F"))
+			{
+				Chip8_KeyPressed(&c8_cpu, 0x0F);
+			}
+			else
+			{
+				Chip8_KeyReleased(&c8_cpu, 0x0F);
+			}
+
+			ImGui::End();
 		}
 		else
 		{
 			ImGui::End();
 		}
+	}
+}
 
-		return bProgramRunning;
+void GUI_DrawMemoryEditorWindow()
+{
+	if (gui_windowstates.show_memory_editor_window)
+	{
+		ImGui::SetNextWindowPos(ImVec2(50, 30), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+		mem_edit.DrawWindow("Memory Editor", c8_cpu.memory, sizeof(c8_cpu.memory));
+		gui_windowstates.show_memory_editor_window = mem_edit.Open;
+	}
+}
+
+void GUI_DrawRegisterWindow()
+{
+	if (gui_windowstates.show_register_window)
+	{
+		ImGui::SetNextWindowPos(ImVec2(50, 30), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(320, 240), ImGuiCond_FirstUseEver);
+
+		if (ImGui::Begin("Registers", &gui_windowstates.show_register_window, child_window_flags))
+		{
+			ImGui::Text("PC = %i, 0x%X", c8_cpu.pc, c8_cpu.pc);
+			ImGui::Text("Instruction = %X", c8_cpu.memory[c8_cpu.pc] << 8 | c8_cpu.memory[c8_cpu.pc + 1]);
+			ImGui::Checkbox("CPU Running", &cpu_auto_tick);
+			ImGui::SameLine();
+			if (ImGui::Button("Tick"))
+			{
+				Chip8_TickCPU(&c8_cpu);
+				Chip8_UpdateTimers(&c8_cpu);
+			}
+			if (ImGui::CollapsingHeader("V"))
+			{
+				for (int v = 0; v < 16; v++)
+				{
+					ImGui::Text("V%X: %i, 0x%X", v, c8_cpu.cpureg_V[v], c8_cpu.cpureg_V[v]);
+				}
+			}
+			ImGui::Text("I: %i, 0x%X", c8_cpu.cpureg_I, c8_cpu.cpureg_I);
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
+		}
+	}
+}
+
+bool GUI_DrawMainWindowMenu()
+{
+	bool bProgramRunning = true;
+
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open..", "Ctrl+O"))
+			{
+				ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ch8", ".");
+			}
+			if (ImGui::MenuItem("Close", "Ctrl+W")) { Chip8_Initialize(&c8_cpu); }
+			if (ImGui::MenuItem("Exit", "Alt+F4")) { bProgramRunning = false; }
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("View"))
+		{
+			ImGui::MenuItem("Keypad", NULL, &gui_windowstates.show_keypad_window);
+			ImGui::MenuItem("Registers", NULL, &gui_windowstates.show_register_window);
+			ImGui::MenuItem("Memory Editor", NULL, &gui_windowstates.show_memory_editor_window);
+			ImGui::MenuItem("Video Out", NULL, &gui_windowstates.show_render_window);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+	else
+	{
+		ImGui::End();
 	}
 
-	void GUI_DrawRenderWindow()
+	return bProgramRunning;
+}
+
+void GUI_DrawRenderWindow()
+{
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+	if (gui_windowstates.show_render_window)
 	{
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+		ImGui::SetNextWindowSizeConstraints(ImVec2(CHIP8_SCREEN_WIDTH + (ImGuiStyleVar_WindowBorderSize*2), CHIP8_SCREEN_HEIGHT + 35), ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::TwoToOneRatio);
 
-		if (gui_windowstates.show_render_window)
+		if (ImGui::Begin("Video Out", &gui_windowstates.show_render_window, child_window_flags))
 		{
-			ImGui::SetNextWindowSizeConstraints(ImVec2(CHIP8_SCREEN_WIDTH + 70, CHIP8_SCREEN_HEIGHT + 35), ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::TwoToOneRatio);
-			
-			if (ImGui::Begin("Video Out", &gui_windowstates.show_render_window, child_window_flags))
-			{
-				ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(ImGui::GetWindowWidth() - 70, ImGui::GetWindowHeight() - 35));
-				
-				/*ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-				if (ImGui::Begin("Example: Simple overlay", (bool*)true, window_flags))
-				{
-					ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-					ImGui::End();
-				}
-				else
-				{
-					ImGui::End();
-				}*/
+			ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(ImGui::GetWindowWidth() - 70, ImGui::GetWindowHeight() - 35));
 
+			/*ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+			if (ImGui::Begin("Example: Simple overlay", (bool*)true, window_flags))
+			{
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::End();
 			}
 			else
 			{
 				ImGui::End();
-			}
+			}*/
+
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::End();
 		}
 	}
+}
 
-	int GUI_Init()
-	{
-		// Setup window
-		glfwSetErrorCallback(glfw_error_callback);
-		if (!glfwInit())
-			return 1;
+int GUI_Init()
+{
+	// Setup window
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit())
+		return 1;
 
-		// Decide GL+GLSL versions
+	// Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 	// GL ES 2.0 + GLSL 100
-		const char* glsl_version = "#version 100";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+	const char* glsl_version = "#version 100";
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 #elif defined(__APPLE__)
 	// GL 3.2 + GLSL 150
-		const char* glsl_version = "#version 150";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+	const char* glsl_version = "#version 150";
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
 #else
 	// GL 3.0 + GLSL 130
-		const char* glsl_version = "#version 130";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-		//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+	const char* glsl_version = "#version 130";
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
 
 	// Create window with graphics context
-		window = glfwCreateWindow(1280, 720, "ACC8I", NULL, NULL);
-		if (window == NULL)
-			return 1;
-		glfwMakeContextCurrent(window);
-		glfwSwapInterval(1); // Enable vsync
+	window = glfwCreateWindow(1280, 720, "ACC8I", NULL, NULL);
+	if (window == NULL)
+		return 1;
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1); // Enable vsync
 
-		// Initialize OpenGL loader
+	// Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-		bool err = gl3wInit() != 0;
+	bool err = gl3wInit() != 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-		bool err = glewInit() != GLEW_OK;
+	bool err = glewInit() != GLEW_OK;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-		bool err = gladLoadGL() == 0;
+	bool err = gladLoadGL() == 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD2)
-		bool err = gladLoadGL(glfwGetProcAddress) == 0; // glad2 recommend using the windowing library loader instead of the (optionally) bundled one.
+	bool err = gladLoadGL(glfwGetProcAddress) == 0; // glad2 recommend using the windowing library loader instead of the (optionally) bundled one.
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING2)
-		bool err = false;
-		glbinding::Binding::initialize();
+	bool err = false;
+	glbinding::Binding::initialize();
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING3)
-		bool err = false;
-		glbinding::initialize([](const char* name) { return (glbinding::ProcAddress)glfwGetProcAddress(name); });
+	bool err = false;
+	glbinding::initialize([](const char* name) { return (glbinding::ProcAddress)glfwGetProcAddress(name); });
 #else
-		bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
+	bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
 #endif
-		if (err)
-		{
-			fprintf(stderr, "Failed to initialize OpenGL loader!\n");
-			return 1;
-		}
-
-		// Setup Dear ImGui context
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-
-		ImGuiIO& io = ImGui::GetIO();
-		io.IniFilename = nullptr;
-
-		// Setup Dear ImGui style
-		//ImGui::StyleColorsDark();
-		ImGui::StyleColorsClassic();
-
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-		//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-		//io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
-		//io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
-
-		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init(glsl_version);
-
-
-		//bool ret = LoadTextureFromFile("MyImage01.jpg", &my_image_texture, &my_image_width, &my_image_height);
-		screen_data_buffer = (unsigned char*)malloc(CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT * 3);
-		glGenTextures(1, &screen_texture);
-
-		return 0;
+	if (err)
+	{
+		fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+		return 1;
 	}
 
-	bool GUI_Render()
-	{
-		ImGuiIO& io = ImGui::GetIO();
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
 
-		if (glfwWindowShouldClose(window))
-			return false;
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = nullptr;
 
-		// Poll and handle events (inputs, window resize, etc.)
-		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-		glfwPollEvents();
+	// Setup Dear ImGui style
+	//ImGui::StyleColorsDark();
+	ImGui::StyleColorsClassic();
 
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
+	//io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
 
-		if (!GUI_DrawAllWindows())
-			return false;
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
 
-		// Rendering
-		ImGui::Render();
-		int display_w, display_h;
-		glfwGetFramebufferSize(window, &display_w, &display_h);
-		glViewport(0, 0, display_w, display_h);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		glfwSwapBuffers(window);
-		glFlush();
+	//bool ret = LoadTextureFromFile("MyImage01.jpg", &my_image_texture, &my_image_width, &my_image_height);
+	screen_data_buffer = (unsigned char*)malloc(CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT * 3);
+	glGenTextures(1, &screen_texture);
 
-		return true;
-	}
+	return 0;
+}
 
-	// Simple helper function to load an image into a OpenGL texture with common settings
-	bool LoadTextureFromFile(const char* filename, GLuint * out_texture, int* out_width, int* out_height)
-	{
-		// Load from file
-		int image_width = 0;
-		int image_height = 0;
-		unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
-		if (image_data == NULL)
-			return false;
+bool GUI_Render()
+{
+	ImGuiIO& io = ImGui::GetIO();
 
-		// Create a OpenGL texture identifier
-		GLuint image_texture;
-		glGenTextures(1, &image_texture);
-		glBindTexture(GL_TEXTURE_2D, image_texture);
+	if (glfwWindowShouldClose(window))
+		return false;
 
-		// Setup filtering parameters for display
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+	// Poll and handle events (inputs, window resize, etc.)
+	// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+	// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+	// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+	// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+	glfwPollEvents();
 
-		// Upload pixels into texture
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	if (!GUI_DrawAllWindows())
+		return false;
+
+	// Rendering
+	ImGui::Render();
+	int display_w, display_h;
+	glfwGetFramebufferSize(window, &display_w, &display_h);
+	glViewport(0, 0, display_w, display_h);
+	glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	glfwSwapBuffers(window);
+	glFlush();
+
+	return true;
+}
+
+// Simple helper function to load an image into a OpenGL texture with common settings
+bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height)
+{
+	// Load from file
+	int image_width = 0;
+	int image_height = 0;
+	unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
+	if (image_data == NULL)
+		return false;
+
+	// Create a OpenGL texture identifier
+	GLuint image_texture;
+	glGenTextures(1, &image_texture);
+	glBindTexture(GL_TEXTURE_2D, image_texture);
+
+	// Setup filtering parameters for display
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+
+	// Upload pixels into texture
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-		stbi_image_free(image_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+	stbi_image_free(image_data);
 
-		*out_texture = image_texture;
-		*out_width = image_width;
-		*out_height = image_height;
+	*out_texture = image_texture;
+	*out_width = image_width;
+	*out_height = image_height;
 
-		return true;
-	}
+	return true;
+}
 
-	bool ScreenToTexture(struct chip8_cpu* cpu, GLuint * out_texture)
+bool ScreenToTexture(struct chip8_cpu* cpu, GLuint* out_texture)
+{
+	if (screen_data_buffer != NULL)
 	{
-		if (screen_data_buffer != NULL)
+		for (int i = 0; i < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT; i++)
 		{
-			for (int i = 0; i < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT; i++)
-			{
-				int index = i * 3;
+			int index = i * 3;
 
-				screen_data_buffer[index] = (c8_cpu.screen[i] != 0) ? 0xFF : 0x00;
-				screen_data_buffer[index + 1] = screen_data_buffer[index];
-				screen_data_buffer[index + 2] = screen_data_buffer[index];
-			}
+			screen_data_buffer[index] = (c8_cpu.screen[i] != 0) ? 0xFF : 0x00;
+			screen_data_buffer[index + 1] = screen_data_buffer[index];
+			screen_data_buffer[index + 2] = screen_data_buffer[index];
 		}
-		else
-		{
-			return false;
-		}
-
-		glBindTexture(GL_TEXTURE_2D, screen_texture);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		// Upload pixels into texture
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP8_SCREEN_WIDTH, CHIP8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, screen_data_buffer);
-
-		*out_texture = screen_texture;
-
-		return true;
 	}
+	else
+	{
+		return false;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, screen_texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP8_SCREEN_WIDTH, CHIP8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, screen_data_buffer);
+
+	*out_texture = screen_texture;
+
+	return true;
+}

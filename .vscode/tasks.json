@@ -7,7 +7,7 @@
             "label": "Build",
             "type": "shell",
             "windows": {
-                "command": ".\\buildme.bat"
+                "command": "${workspaceFolder}/../make"
             },
             "group": "build",
             "presentation": {

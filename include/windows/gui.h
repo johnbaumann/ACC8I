@@ -7,6 +7,7 @@
 
 bool GUI_DrawAllWindows();
 void GUI_DrawFileDialog();
+void GUI_DrawKeyPadWindow();
 bool GUI_DrawMainWindowMenu();
 void GUI_DrawMemoryEditorWindow();
 void GUI_DrawRenderWindow();

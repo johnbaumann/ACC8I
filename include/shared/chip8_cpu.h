@@ -81,6 +81,14 @@ extern "C" {
 
 		// Data registers[16]
 		uint8_t cpureg_V[16];
+
+		// Keypad
+		// 1 2 3 C
+		// 4 5 6 D
+		// 7 8 9 E
+		// A 0 B F
+		bool keypad[0x0F];
+
 		// Address register(12-bits usable)
 		uint16_t cpureg_I;
 
@@ -100,19 +108,23 @@ extern "C" {
 		uint16_t pc;
 
 		bool cpu_halted;
+		bool cpu_waiting_for_input;
+
+		uint8_t keypress_destination_reg;
 	};
 
+	void Chip8_ClearScreen(struct chip8_cpu*);
 	void Chip8_Initialize(struct chip8_cpu*);
+	void Chip8_KeyPressed(struct chip8_cpu*, uint8_t keyvalue);
+	void Chip8_KeyReleased(struct chip8_cpu*, uint8_t keyvalue);
 	void Chip8_TickCPU(struct chip8_cpu*);
 	void Chip8_UpdateTimers(struct chip8_cpu* cpu);
-	void Chip8_ClearScreen(struct chip8_cpu*);
+	
 	static void Chip8_JumpToSubRoutine(struct chip8_cpu*, uint16_t);
 	static void Chip8_ReturnFromSubRoutine(struct chip8_cpu*);
 	static uint16_t Chip8_StackPop(struct chip8_cpu*);
 	static void Chip8_StackPush(struct chip8_cpu*, uint16_t);
 
-	
-	// Platform dependent, implement per system.
 	uint8_t Chip8_RandomNumber();
 	void Chip8_SeedRNG();
 

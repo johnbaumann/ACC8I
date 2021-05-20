@@ -166,7 +166,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\shared\chip8_cpu.c" />
-    <ClCompile Include="source\shared\cpu_impl_rng.c" />
+    <ClCompile Include="source\shared\chip8_cpu_impl_rng.c" />
     <ClCompile Include="source\windows\gui.cpp" />
     <ClCompile Include="source\windows\main.cpp" />
   </ItemGroup>

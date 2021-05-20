@@ -30,14 +30,14 @@
     <ClCompile Include="source\shared\chip8_cpu.c">
       <Filter>Source Files\shared</Filter>
     </ClCompile>
-    <ClCompile Include="source\shared\cpu_impl_rng.c">
-      <Filter>Source Files\shared</Filter>
-    </ClCompile>
     <ClCompile Include="source\windows\main.cpp">
       <Filter>Source Files\windows</Filter>
     </ClCompile>
     <ClCompile Include="source\windows\gui.cpp">
       <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="source\shared\chip8_cpu_impl_rng.c">
+      <Filter>Source Files\shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

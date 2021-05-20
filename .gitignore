@@ -20,3 +20,6 @@ build/ps1/*.map
 vsprojects/packages
 
 imgui.ini
+
+*.mcd
+pcsx.json

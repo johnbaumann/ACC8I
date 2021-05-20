@@ -10,7 +10,16 @@
 
 struct chip8_cpu c8_cpu;
 
-void Chip8_Initialize(struct chip8_cpu *cpu)
+
+void Chip8_ClearScreen(struct chip8_cpu* cpu)
+{
+	for (uint16_t i = 0; i < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT; i++)
+	{
+		cpu->screen[i] = 0;
+	}
+}
+
+void Chip8_Initialize(struct chip8_cpu* cpu)
 {
 	for (uint16_t i = 0; i < sizeof(chip8_font_table); i++)
 	{
@@ -37,12 +46,30 @@ void Chip8_Initialize(struct chip8_cpu *cpu)
 
 	cpu->pc = 0x200;
 	cpu->cpu_halted = true;
+	cpu->cpu_waiting_for_input = false;
 
 	Chip8_SeedRNG();
 }
 
-void Chip8_TickCPU(struct chip8_cpu *cpu)
+void Chip8_KeyPressed(struct chip8_cpu* cpu, uint8_t keyvalue)
 {
+	cpu->keypad[keyvalue] = true;
+
+	if (cpu->cpu_waiting_for_input)
+	{
+		cpu->cpureg_V[cpu->keypress_destination_reg] = keyvalue;
+		cpu->cpu_waiting_for_input = false;
+	}
+}
+
+void Chip8_KeyReleased(struct chip8_cpu* cpu, uint8_t keyvalue)
+{
+	cpu->keypad[keyvalue] = false;
+}
+
+void Chip8_TickCPU(struct chip8_cpu* cpu)
+{
+
 	uint16_t instruction = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc + 1];
 
 	// Used for stepping through individual bits when drawing
@@ -53,6 +80,15 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 
 	// Used for math operations. Could re-use memory_iterator to save 2 bytes of RAM.
 	uint16_t math_accumulator;
+
+	uint8_t drawing_x_offset;
+	uint8_t drawing_y_offset;
+
+
+	if (cpu->cpu_waiting_for_input)
+	{
+		return;
+	}
 
 	switch (Nibble1(instruction))
 	{
@@ -238,12 +274,19 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 	case 0x0D: // DXYN
 		memory_iterator = cpu->cpureg_I;
 		bit_iterator = 7;
+		cpu->cpureg_V[0x0F] = 0x00;
+
 		for (uint8_t y = cpu->cpureg_V[Nibble3(instruction)]; y - cpu->cpureg_V[Nibble3(instruction)] < Nibble4(instruction); y++)
 		{
 			for (uint8_t x = cpu->cpureg_V[Nibble2(instruction)]; x - cpu->cpureg_V[Nibble2(instruction)] < 8; x++)
 			{
-				if ((y * CHIP8_SCREEN_WIDTH + x) < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT)
-					cpu->screen[y * CHIP8_SCREEN_WIDTH + x] ^= ((cpu->memory[memory_iterator] >> bit_iterator) & 1U) > 0 ? true : false;
+				math_accumulator = ((cpu->memory[memory_iterator] >> bit_iterator) & 1U);
+				if ((cpu->screen[(y % CHIP8_SCREEN_HEIGHT) * CHIP8_SCREEN_WIDTH + (x % CHIP8_SCREEN_WIDTH)] == true) && (math_accumulator == 0))
+				{
+					cpu->cpureg_V[0x0F] = 1;
+				}
+
+				cpu->screen[(y % CHIP8_SCREEN_HEIGHT) * CHIP8_SCREEN_WIDTH + (x % CHIP8_SCREEN_WIDTH)] ^= ((math_accumulator > 0) ? true : false);
 				if (bit_iterator == 0)
 				{
 					bit_iterator = 7;
@@ -255,63 +298,67 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 				}
 			}
 		}
+
+
 		break;
 
 	case 0x0E:
-		// Skip the following instruction if the key corresponding to the hex value currently stored in register VX is pressed
-		if ((uint8_t)(instruction & 0x00FF) == 0x9E) // EX9E
+		switch (NN(instruction))
 		{
-			//if(KeyPressed())
-			//cpu->pc += 2;
-		}
+		// Skip the following instruction if the key corresponding to the hex value currently stored in register VX is pressed
+		case 0x9E: // EX9E
+			if (cpu->keypad[cpu->cpureg_V[Nibble2(instruction)]])
+			{
+				cpu->pc += 2;
+			}
+			break;
 
 		// Skip the following instruction if the key corresponding to the hex value currently stored in register VX is not pressed
-		else if ((uint8_t)(instruction & 0x00FF) == 0xA1) // EXA1
-		{
-			//if(!KeyPressed())
-			cpu->pc += 2;
+		case 0xA1: // EXA1
+			if (cpu->keypad[cpu->cpureg_V[Nibble2(instruction)]])
+			{
+				cpu->pc += 2;
+			}
+			break;
 		}
-		else
-		{
-			// Bad opcode
-		}
-
-		break;
 
 	case 0x0F:
 		switch (NN(instruction))
 		{
-			// Store the current value of the delay timer in register VX
 		case 0x07: // FX07
+			// Store the current value of the delay timer in register VX
 			cpu->cpureg_V[Nibble2(instruction)] = cpu->delay_timer;
 			break;
 
-			// Wait for a keypress and store the result in register VX
 		case 0x0A: // FX0A
+			// Wait for a keypress and store the result in register VX
+			cpu->cpu_waiting_for_input = true;
+			cpu->keypress_destination_reg = Nibble2(instruction);
 			break;
 
-			// Set the delay timer to the value of register VX
+			
 		case 0x15: // FX15
+			// Set the delay timer to the value of register VX
 			cpu->delay_timer = cpu->cpureg_V[Nibble2(instruction)];
 			break;
 
-			// Set the sound timer to the value of register VX
 		case 0x18: // FX18
+			// Set the sound timer to the value of register VX
 			cpu->sound_timer = cpu->cpureg_V[Nibble2(instruction)];
 			break;
 
-			// Add the value stored in register VX to register I
 		case 0x1E: // FX1E
+			// Add the value stored in register VX to register I
 			cpu->cpureg_I += cpu->cpureg_V[Nibble2(instruction)];
 			break;
 
-			// Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
 		case 0x29: // FX29
+			// Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
 			cpu->cpureg_I = CHIP8_FONT_TABLE_OFFSET + (cpu->cpureg_V[Nibble2(instruction)] * 5);
 			break;
 
-			// Store the binary-coded decimal equivalent of the value stored in register VX at addresses I, I + 1, and I + 2
 		case 0x33: // FX33
+			// Store the binary-coded decimal equivalent of the value stored in register VX at addresses I, I + 1, and I + 2
 			cpu->memory[cpu->cpureg_I] = (cpu->cpureg_V[Nibble2(instruction)] % 1000) / 100;
 			cpu->memory[cpu->cpureg_I + 1] = (cpu->cpureg_V[Nibble2(instruction)] % 100) / 10;
 			cpu->memory[cpu->cpureg_I + 2] = (cpu->cpureg_V[Nibble2(instruction)] % 10);
@@ -332,8 +379,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 		case 0x65: // FX65
 			for (uint8_t i = 0; i <= Nibble2(instruction); i++)
 			{
-				cpu->cpureg_V[i] = cpu->memory[cpu->cpureg_I];
-				cpu->cpureg_I++;
+				cpu->cpureg_V[i] = cpu->memory[cpu->cpureg_I + i];
 			}
 			break;
 		}
@@ -364,15 +410,7 @@ void Chip8_TickCPU(struct chip8_cpu *cpu)
 	}
 }
 
-void Chip8_ClearScreen(struct chip8_cpu *cpu)
-{
-	for (uint16_t i = 0; i < CHIP8_SCREEN_WIDTH * CHIP8_SCREEN_HEIGHT; i++)
-	{
-		cpu->screen[i] = 0;
-	}
-}
-
-void Chip8_UpdateTimers(struct chip8_cpu *cpu)
+void Chip8_UpdateTimers(struct chip8_cpu* cpu)
 {
 	if (cpu->delay_timer > 0)
 	{
@@ -385,20 +423,20 @@ void Chip8_UpdateTimers(struct chip8_cpu *cpu)
 	}
 }
 
-static void Chip8_JumpToSubRoutine(struct chip8_cpu *cpu, uint16_t address)
+static void Chip8_JumpToSubRoutine(struct chip8_cpu* cpu, uint16_t address)
 {
 	// Push pc to stack
 	Chip8_StackPush(cpu, cpu->pc);
 	cpu->pc = address;
 }
 
-static void Chip8_ReturnFromSubRoutine(struct chip8_cpu *cpu)
+static void Chip8_ReturnFromSubRoutine(struct chip8_cpu* cpu)
 {
 	// Pull pc from stack
 	cpu->pc = Chip8_StackPop(cpu);
 }
 
-static uint16_t Chip8_StackPop(struct chip8_cpu *cpu)
+static uint16_t Chip8_StackPop(struct chip8_cpu* cpu)
 {
 	uint16_t stack_value;
 
@@ -416,7 +454,7 @@ static uint16_t Chip8_StackPop(struct chip8_cpu *cpu)
 	return stack_value;
 }
 
-static void Chip8_StackPush(struct chip8_cpu *cpu, uint16_t value)
+static void Chip8_StackPush(struct chip8_cpu* cpu, uint16_t value)
 {
 	cpu->stack_count++;
 	if (cpu->stack_count >= CHIP8_STACK_SIZE)
