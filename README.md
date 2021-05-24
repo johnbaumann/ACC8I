@@ -1,7 +1,8 @@
 # ACC8I
+### A Crappy Chip-8 Interpreter
 
-A Crappy Chip-8 Interpreter
-
+#### ACC8I Running Trip8 by Martijn Wenting / Revival Studios
+![Image of ACC8I](https://github.com/johnbaumann/ACC8I/blob/master/PC_Screenshot.png?raw=true)
 
 ## Note
 This project is still a work in progress. The PC version still has several bugs and there is currently no sound or input. The Playstation code is merely a framework at this time.
