@@ -1,7 +1,9 @@
 TARGET = ACC8I
-TYPE = ps-exe
+TYPE = exe
 
 SRCS = ../../source/ps1/main.c \
+../../source/ps1/graphics.c \
+../../source/ps1/pads.c \
 ../../source/ps1/includedfileslist.s \
 ../../source/shared/chip8_cpu.c \
 ../../source/shared/chip8_cpu_impl_rng.c \

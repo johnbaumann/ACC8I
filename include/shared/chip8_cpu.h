@@ -80,14 +80,14 @@ extern "C" {
 		uint8_t memory[4096];
 
 		// Data registers[16]
-		uint8_t cpureg_V[16];
+		uint8_t cpureg_V[0x0F + 1];
 
 		// Keypad
 		// 1 2 3 C
 		// 4 5 6 D
 		// 7 8 9 E
 		// A 0 B F
-		bool keypad[0x0F];
+		bool keypad[0x0F + 1];
 
 		// Address register(12-bits usable)
 		uint16_t cpureg_I;

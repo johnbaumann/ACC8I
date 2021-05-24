@@ -26,9 +26,10 @@ void Chip8_Initialize(struct chip8_cpu* cpu)
 		cpu->memory[CHIP8_FONT_TABLE_OFFSET + i] = chip8_font_table[i];
 	}
 
-	for (uint8_t i = 0; i < 16; i++)
+	for (uint8_t i = 0; i <= 0x0F; i++)
 	{
 		cpu->cpureg_V[i] = 0;
+		cpu->keypad[i] = false;
 	}
 
 	cpu->cpureg_I = 0;
@@ -281,7 +282,7 @@ void Chip8_TickCPU(struct chip8_cpu* cpu)
 			for (uint8_t x = cpu->cpureg_V[Nibble2(instruction)]; x - cpu->cpureg_V[Nibble2(instruction)] < 8; x++)
 			{
 				math_accumulator = ((cpu->memory[memory_iterator] >> bit_iterator) & 1U);
-				if ((cpu->screen[(y % CHIP8_SCREEN_HEIGHT) * CHIP8_SCREEN_WIDTH + (x % CHIP8_SCREEN_WIDTH)] == true) && (math_accumulator == 0))
+				if ((cpu->screen[(y % CHIP8_SCREEN_HEIGHT) * CHIP8_SCREEN_WIDTH + (x % CHIP8_SCREEN_WIDTH)] == true) && (math_accumulator == 1))
 				{
 					cpu->cpureg_V[0x0F] = 1;
 				}
@@ -315,7 +316,7 @@ void Chip8_TickCPU(struct chip8_cpu* cpu)
 
 		// Skip the following instruction if the key corresponding to the hex value currently stored in register VX is not pressed
 		case 0xA1: // EXA1
-			if (cpu->keypad[cpu->cpureg_V[Nibble2(instruction)]])
+			if (!cpu->keypad[cpu->cpureg_V[Nibble2(instruction)]])
 			{
 				cpu->pc += 2;
 			}

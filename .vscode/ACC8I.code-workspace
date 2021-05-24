@@ -1,149 +1,48 @@
 {
 	"folders": [
 		{
-			"path": "..\\.vscode"
-		},
-		{
-			"path": "..\\include"
-		},
-		{
-			"path": "..\\source"
-		},
-		{
-			"path": "..\\build"
+			"path": "..\\."
 		}
 	],
 	"settings": {
 		"files.exclude": {
-			"windows": true,
+			".vs": true,
+			"build/x64": true,
+			"build/x86": true,
+			"thirdparty/psyq/*": true,
+			"vsprojects": true,
+			"Win32": true,
+			"**/windows": true,
+			"**/comport.txt": true,
+			"**.config": true,
+			"**.vcxproj*": true,
+			"**/*.dep": true,
+			"**.git**": true,
 			"**/*.o": true,
-			"**/*.dep": true
+			"**.sln": true			
 		},
 		"C_Cpp.default.includePath": [
-			"${workspaceFolder}/../thirdparty/psyq/include",
-			"${workspaceFolder}/../include"
+			"${workspaceFolder}/thirdparty/psyq/include",
+			"${workspaceFolder}/include"
 		],
 		"C_Cpp.default.defines": [],
 		"C_Cpp.default.cStandard": "c11",
 		"C_Cpp.default.cppStandard": "c++17",
 		"files.associations": {
 			"libetc.h": "c",
-			"stdint.h": "c"
+			"stdint.h": "c",
+			"types.h": "c",
+			"graphics.h": "c",
+			"pad.h": "c",
+			"chip8_cpu.h": "c",
+			"PAD.H": "cpp",
+			"libgs.h": "c",
+			"libapi.h": "c",
+			"iomanip": "c",
+			"list": "c",
+			"ostream": "c",
+			"xlocmon": "c",
+			"xstring": "c"
 		}
-	},
-	"tasks": {
-		"version": "2.0.0",
-		"tasks": [
-			{
-				"label": "Build",
-				"type": "shell",
-				"windows": {
-					"command": "make all",
-					"options": {
-						"cwd": "${workspaceFolder}\\..\\build\\ps1"
-					},
-					"args": []
-				},
-				"group": "build",
-				"presentation": {
-					"reveal": "always",
-					"panel": "new"
-				},
-				"problemMatcher": []
-			},
-			{
-				"label": "Build Clean",
-				"type": "shell",
-				"windows": {
-					"command": "make clean all",
-					"options": {
-						"cwd": "${workspaceFolder}\\..\\build\\ps1"
-					},
-					"args": []
-				},
-				"group": "build",
-				"presentation": {
-					"reveal": "always",
-					"panel": "new"
-				},
-				"problemMatcher": []
-			},
-			{
-				"label": "Clean",
-				"type": "shell",
-				"windows": {
-					"command": " make clean",
-					"options": {
-						"cwd": "${workspaceFolder}\\..\\build\\ps1"
-					},
-					"args": []
-				},
-				"group": "build",
-				"presentation": {
-					"reveal": "always",
-					"panel": "new"
-				},
-				"problemMatcher": []
-			},
-			{
-				"label": "Launch PCSX-Redux",
-				"type": "shell",
-				"windows": {
-					"command": "C:/Users/John/source/repos/pcsx-redux/vsprojects/x64/Release/pcsx-redux.exe"
-				},
-				"group": "build",
-				"presentation": {
-					"reveal": "always",
-					"panel": "new"
-				},
-				"problemMatcher": []
-			}
-		]
-	},
-	"launch": {
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"type": "gdb",
-				"request": "launch",
-				"name": "(gdb) Debug with PCSX-Redux",
-				"target": "./ACC8I.elf",
-				"gdbpath": "/usr/bin/gdb-multiarch",
-				"windows": {
-					"gdbpath": "C:/gdb-multiarch/bin/gdb.exe",
-				},
-				"cwd": ".\\..\\build\\ps1",
-				"autorun": [
-					"set remote interrupt-sequence Ctrl-C",
-					"target remote localhost:3333",
-					"set substitute-path /project .",
-					"monitor reset shellhalt",
-					"load ./helloworld.elf",
-					"tbreak main",
-					"continue",
-				],
-				"valuesFormatting": "parseText"
-			},
-			
-			{
-				"name": "(gdb) Launch PCSX-Redux",
-				"type": "cppdbg",
-				"request": "launch",
-				"program": "C:/Users/John/source/repos/pcsx-redux/vsprojects/x64/Release/pcsx-redux.exe",
-				"args": [],
-				"stopAtEntry": false,
-				"cwd": "${workspaceFolder}",
-				"environment": [],
-				"externalConsole": true,
-				"MIMode": "gdb",
-				"setupCommands": [
-					{
-						"description": "Enable pretty-printing for gdb",
-						"text": "-enable-pretty-printing",
-						"ignoreFailures": true
-					}
-				]
-			}
-		]
 	}
 }

@@ -7,7 +7,30 @@
             "label": "Build",
             "type": "shell",
             "windows": {
-                "command": "${workspaceFolder}/../make"
+                "command": "make",
+                "options": {
+                    "cwd": "${workspaceFolder}\\build\\ps1"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Rebuild",
+            "type": "shell",
+            "windows": {
+                "command": "make clean all",
+                "options": {
+                    "cwd": "${workspaceFolder}\\build\\ps1"
+                },
+                "args": []
             },
             "group": "build",
             "presentation": {
@@ -20,11 +43,10 @@
             "label": "Clean",
             "type": "shell",
             "windows": {
-                "command": ".\\cleanup.bat"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
+                "command": "make clean",
+                "options": {
+                    "cwd": "${workspaceFolder}\\build\\ps1"
+                }
             },
             "presentation": {
                 "reveal": "always",
@@ -36,13 +58,32 @@
             "label": "Launch PCSX-Redux",
             "type": "shell",
             "windows": {
-                "command": "C:/Users/John/source/repos/pcsx-redux/vsprojects/x64/Release/pcsx-redux.exe"
+                "command": ".\\pcsx-redux.exe",
+                "options": {
+                    "cwd": "C:/Users/John/source/repos/pcsx-redux/vsprojects/x64/Release/"
+                },
             },
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run nops",
+            "type": "shell",
+            "windows": {
+                "command": "nops /fast /exe ACC8I.exe",
+                "options": {
+                    "cwd": "${workspaceFolder}\\build\\ps1"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
     ]
-  }
+}

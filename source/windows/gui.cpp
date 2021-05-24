@@ -563,7 +563,6 @@ int GUI_Init()
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.IniFilename = nullptr;
 
 	// Setup Dear ImGui style
 	//ImGui::StyleColorsDark();

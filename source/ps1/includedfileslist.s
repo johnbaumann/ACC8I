@@ -10,14 +10,18 @@
 	.set push
 	.set noreorder
     
+	.global screen_tim
 	.global chip8_rom
 	
 	.align 4			
 
 
+screen_tim:
+		.incbin "../../assets/Test.tim"
+		.align 4
 
 chip8_rom:
-		.incbin "../../thirdparty/chip8-test-rom/test_opcode.ch8"
+		.incbin "../../thirdparty/chip8-roms/games/Tetris [Fran Dachille, 1991].ch8"
 		.align 4
 	
 	.set pop

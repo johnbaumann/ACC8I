@@ -12,7 +12,9 @@ x64
 
 build/ps1/*.elf
 build/ps1/*.ps-exe
+build/ps1/*.exe
 build/ps1/*.map
+build/ps1/comport.txt
 *.o
 *.dep
 
