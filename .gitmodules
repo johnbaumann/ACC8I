@@ -13,3 +13,6 @@
 [submodule "thirdparty/chip8-test-rom"]
 	path = thirdparty/chip8-test-rom
 	url = https://github.com/corax89/chip8-test-rom.git
+[submodule "thirdparty/nugget"]
+	path = thirdparty/nugget
+	url = https://github.com/pcsx-redux/nugget
