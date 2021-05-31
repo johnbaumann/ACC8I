@@ -1,17 +1,19 @@
 TARGET = ACC8I
-TYPE = exe
+TYPE = ps-exe
 
 SRCS = ../../source/ps1/main.c \
+../../source/ps1/filesystem.c \
 ../../source/ps1/graphics.c \
 ../../source/ps1/pads.c \
 ../../source/ps1/includedfileslist.s \
 ../../source/shared/chip8_cpu.c \
 ../../source/shared/chip8_cpu_impl_rng.c \
-../../thirdparty/nugget/crt0/crt0.s \
+../../thirdparty/nugget/common/crt0/crt0.s \
 
 
 
 CPPFLAGS += -I../../thirdparty/psyq/include
+CPPFLAGS += -I../../thirdparty/nugget/common
 CPPFLAGS += -I../../include
 LDFLAGS += -L../../thirdparty/psyq/lib
 LDFLAGS += -Wl,--start-group

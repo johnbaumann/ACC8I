@@ -11,8 +11,8 @@ This project makes use of several open-source softwares:
 
 ### Playstation
 #### "nugget"
-A method of compiling playstation code using modern gcc, a sub-component of PCSX-Redux
-https://github.com/grumpycoders/pcsx-redux/tree/main/src/mips
+A method of compiling playstation code using modern gcc, and other useful features such as PC Drive
+https://github.com/pcsx-redux/nugget
 
 ### PC
 #### ImGui
@@ -38,6 +38,7 @@ https://github.com/kripod/chip8-roms/
 
 ### Special thanks
 Nicolas Noble for the PS1 build environment(and for the help sorting it out)
+Nic + sickle for their work on bringing PC drive support to unirom+nops and pcsx-redux
 Schnappy and NDR008 for their tutorials for setting up Modern GCC + PsyQ + VSCode
 And to all the other helpful folks of PSXDEV!
 Shout out to danhans42 and sickle, who's various projects have been a big inspiration(and help) for me.

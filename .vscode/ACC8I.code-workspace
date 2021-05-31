@@ -19,30 +19,21 @@
 			"**/*.dep": true,
 			"**.git**": true,
 			"**/*.o": true,
-			"**.sln": true			
+			"**.sln": true,
+			"**/*.ps-exe": true,
+			"**/*.map": true,
+			"**/*.elf": true,
+			"**.mcd": true,
+			"**.ini": true,
+			"pcsx.json": true
 		},
 		"C_Cpp.default.includePath": [
 			"${workspaceFolder}/thirdparty/psyq/include",
+			"${workspaceFolder}/thirdparty/nugget/common",
 			"${workspaceFolder}/include"
 		],
 		"C_Cpp.default.defines": [],
 		"C_Cpp.default.cStandard": "c11",
-		"C_Cpp.default.cppStandard": "c++17",
-		"files.associations": {
-			"libetc.h": "c",
-			"stdint.h": "c",
-			"types.h": "c",
-			"graphics.h": "c",
-			"pad.h": "c",
-			"chip8_cpu.h": "c",
-			"PAD.H": "cpp",
-			"libgs.h": "c",
-			"libapi.h": "c",
-			"iomanip": "c",
-			"list": "c",
-			"ostream": "c",
-			"xlocmon": "c",
-			"xstring": "c"
-		}
+		"C_Cpp.default.cppStandard": "c++17"
 	}
 }

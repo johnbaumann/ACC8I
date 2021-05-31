@@ -5,10 +5,10 @@
 //#include <libapi.h> // Root counters
 #include <stdint.h>
 
+#include "ps1/filesystem.h"
 #include "ps1/graphics.h"
 #include "ps1/pads.h"
 #include "shared/chip8_cpu.h"
-
 
 extern uint8_t chip8_rom[];
 
@@ -37,7 +37,9 @@ int main()
 	InitGraphics();
 
 	Chip8_Initialize(&c8_cpu);
-	LoadROM();
+	InitFilesystem();
+	LoadFile(".\\thirdparty\\chip8-roms\\games\\Tetris [Fran Dachille, 1991].ch8", &c8_cpu);
+	//LoadROM();
 
 	if (GetVideoMode() == MODE_NTSC)
 	{
@@ -61,7 +63,7 @@ int main()
 		if (!program_paused)
 		{
 			HandleCHIP8KeyboardEvents();
-			for(int j = 0; j < cpu_rate; j++)
+			for (int j = 0; j < cpu_rate; j++)
 			{
 				for (int i = 0; i < cpu_ticks_per_frame; i++)
 				{

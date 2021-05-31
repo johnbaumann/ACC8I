@@ -22,6 +22,7 @@ build/ps1/comport.txt
 vsprojects/packages
 
 imgui.ini
+comport.txt
 
 *.mcd
 pcsx.json

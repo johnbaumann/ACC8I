@@ -10,7 +10,6 @@
 #include <libapi.h>
 #include <stdint.h>
 
-
 #define ORDERING_TABLE_LENGTH (10)
 #define PACKETMAX (300)
 
@@ -28,7 +27,6 @@ GsSPRITE gs_c8_screen_sprite;
 volatile uint8_t vsync_counter;
 uint8_t vsyncs_per_second;
 
-
 volatile uint8_t frame_count;
 volatile uint8_t frame_rate;
 
@@ -37,31 +35,31 @@ ushort ps1_screen_height;
 
 void _VSyncCallback()
 {
-	vsync_counter++;
-	if (vsync_counter >= vsyncs_per_second)
-	{
-		frame_rate = frame_count;
-		frame_count = 0;
-		vsync_counter = 0;
-	}
+    vsync_counter++;
+    if (vsync_counter >= vsyncs_per_second)
+    {
+        frame_rate = frame_count;
+        frame_count = 0;
+        vsync_counter = 0;
+    }
 }
 
 void DisplayAll()
 {
     int active_buffer = GsGetActiveBuff();
 
-	FntFlush(-1);
-	GsSetWorkBase((PACKET *)packet_area[active_buffer]);
-	GsClearOt(0, 0, &gsot_header[active_buffer]);
-	GsSortSprite(&gs_c8_screen_sprite, &gsot_header[active_buffer], 0);
-	DrawSync(0);
+    FntFlush(-1);
+    GsSetWorkBase((PACKET *)packet_area[active_buffer]);
+    GsClearOt(0, 0, &gsot_header[active_buffer]);
+    GsSortSprite(&gs_c8_screen_sprite, &gsot_header[active_buffer], 0);
+    DrawSync(0);
 
     frame_count++;
-	VSync(0);
-	GsSwapDispBuff();
-	GsSortClear(0, 0, 75, &gsot_header[active_buffer]);
+    VSync(0);
+    GsSwapDispBuff();
+    GsSortClear(0, 0, 75, &gsot_header[active_buffer]);
 
-	GsDrawOt(&gsot_header[active_buffer]);
+    GsDrawOt(&gsot_header[active_buffer]);
 }
 
 void InitGraphics()
@@ -90,23 +88,23 @@ void InitGraphics()
     GsClearOt(0, 0, &gsot_header[0]);
     GsClearOt(0, 0, &gsot_header[1]);
 
-	FntLoad(960, 256);
-	FntOpen(0, 8, 256, 200, 0, 512);
+    FntLoad(960, 256);
+    FntOpen(0, 8, 256, 200, 0, 512);
 
-	InitScreenTexture(screen_tim);
-	InitSprite(&gs_c8_screen_image, &gs_c8_screen_sprite);
+    InitScreenTexture(screen_tim);
+    InitSprite(&gs_c8_screen_image, &gs_c8_screen_sprite);
 
-	gs_c8_screen_sprite.x = (gs_c8_screen_sprite.w / 2) * CHIP8_OUTPUT_SCALE;
-	gs_c8_screen_sprite.x += ((ps1_screen_width - (CHIP8_SCREEN_WIDTH * CHIP8_OUTPUT_SCALE)) / 2);
-	gs_c8_screen_sprite.y = ((gs_c8_screen_sprite.h / 2) * CHIP8_OUTPUT_SCALE);
-	gs_c8_screen_sprite.y += ((ps1_screen_height - (CHIP8_SCREEN_HEIGHT * CHIP8_OUTPUT_SCALE)) / 2);
+    gs_c8_screen_sprite.x = (gs_c8_screen_sprite.w / 2) * CHIP8_OUTPUT_SCALE;
+    gs_c8_screen_sprite.x += ((ps1_screen_width - (CHIP8_SCREEN_WIDTH * CHIP8_OUTPUT_SCALE)) / 2);
+    gs_c8_screen_sprite.y = ((gs_c8_screen_sprite.h / 2) * CHIP8_OUTPUT_SCALE);
+    gs_c8_screen_sprite.y += ((ps1_screen_height - (CHIP8_SCREEN_HEIGHT * CHIP8_OUTPUT_SCALE)) / 2);
 
-	gs_c8_screen_sprite.scalex = 4096 * CHIP8_OUTPUT_SCALE;
-	gs_c8_screen_sprite.scaley = 4096 * CHIP8_OUTPUT_SCALE;
+    gs_c8_screen_sprite.scalex = 4096 * CHIP8_OUTPUT_SCALE;
+    gs_c8_screen_sprite.scaley = 4096 * CHIP8_OUTPUT_SCALE;
 
-	vsync_counter = 0;
-	frame_count = 0;
-	frame_rate = 0;
+    vsync_counter = 0;
+    frame_count = 0;
+    frame_rate = 0;
     VSyncCallback(_VSyncCallback);
 }
 

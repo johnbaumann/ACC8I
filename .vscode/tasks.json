@@ -60,8 +60,10 @@
             "windows": {
                 "command": ".\\pcsx-redux.exe",
                 "options": {
+                    // Set this to the location of your pcsx-redux executable
                     "cwd": "C:/Users/John/source/repos/pcsx-redux/vsprojects/x64/Release/"
                 },
+                "args": ["-pcdrv -pcdrvbase \"${workspaceFolder\""]
             },
             "group": "build",
             "presentation": {
@@ -74,9 +76,24 @@
             "label": "Run nops",
             "type": "shell",
             "windows": {
-                "command": "nops /fast /exe ACC8I.exe",
+                "command": "nops /fast /exe .\\build\\ps1\\ACC8I.ps-exe /m",
                 "options": {
-                    "cwd": "${workspaceFolder}\\build\\ps1"
+                    "cwd": "${workspaceFolder}"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Set nops debug",
+            "type": "shell",
+            "windows": {
+                "command": "nops /debug",
+                "options": {
+                    "cwd": "${workspaceFolder}"
                 }
             },
             "presentation": {

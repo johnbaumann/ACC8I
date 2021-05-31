@@ -1,5 +1,8 @@
-# Purpose
-This directory contains mips-only code, targeting the PSX CPU. It contains various tests and rewrites.
+# PCSX-Redux's mips code
 
-# License
-While the rest of PCSX-Redux is based off the old GPL pcsx code, and requires to stay this way, this subdirectory is fully independent code that doesn't link against the rest of the project. Therefore, this subdirectory is covered by the MIT license, and can be used independently from the rest of the project.
+This repository is a read-only mirror of
+[PCSX-Redux's mips folder](https://github.com/grumpycoders/pcsx-redux/tree/main/src/mips).
+Its purpose is to be used as a submodule for projects that want to use the various parts
+contained herein without bringing the whole of PCSX-Redux's codebase.
+
+Check the [doc](doc/README.md) folder for more information.

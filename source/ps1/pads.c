@@ -32,7 +32,7 @@ void HandleSystemPadEvents()
     // Decrese CPU Speed
     if (pad_mask & Pad1L1)
     {
-        if(cpu_rate > 1U)
+        if (cpu_rate > 1U)
         {
             cpu_rate--;
         }
@@ -42,7 +42,7 @@ void HandleSystemPadEvents()
     // Increase CPU Speed
     if (pad_mask & Pad1R1)
     {
-        if(cpu_rate < 100U)
+        if (cpu_rate < 100U)
         {
             cpu_rate++;
         }
