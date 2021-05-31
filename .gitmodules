@@ -16,6 +16,3 @@
 [submodule "thirdparty/nugget"]
 	path = thirdparty/nugget
 	url = https://github.com/pcsx-redux/nugget.git
-[submodule "thirdparty/nugget/third_party/uC-sdk"]
-	path = thirdparty/nugget/third_party/uC-sdk
-	url = https://github.com/grumpycoders/uC-sdk.git
