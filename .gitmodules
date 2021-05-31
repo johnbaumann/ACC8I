@@ -15,4 +15,7 @@
 	url = https://github.com/corax89/chip8-test-rom.git
 [submodule "thirdparty/nugget"]
 	path = thirdparty/nugget
-	url = https://github.com/pcsx-redux/nugget.git
+	url = https://github.com/pcsx-redux/nugget
+[submodule "thirdparty/nugget/third_party/uC-sdk"]
+	path = thirdparty/nugget/third_party/uC-sdk
+	url = https://github.com/grumpycoders/uC-sdk.git
