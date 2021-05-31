@@ -16,3 +16,4 @@
 [submodule "thirdparty/nugget"]
 	path = thirdparty/nugget
 	url = https://github.com/pcsx-redux/nugget.git
+	
