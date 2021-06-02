@@ -4,12 +4,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "Build(GCC)",
             "type": "shell",
             "windows": {
                 "command": "make",
                 "options": {
-                    "cwd": "${workspaceFolder}\\build\\ps1"
+                    "cwd": "${workspaceFolder}"
                 }
             },
             "group": {
@@ -23,12 +23,57 @@
             "problemMatcher": []
         },
         {
-            "label": "Rebuild",
+            "label": "Build(Docker)",
+            "type": "shell",
+            "windows": {
+                "command": ".\\buildme-ps1docker.bat",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean(Docker)",
+            "type": "shell",
+            "windows": {
+                "command": ".\\cleanup-ps1docker.bat",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Rebuild(Docker)",
+            "type": "shell",
+            "windows": {
+                "command": ".\\rebuild-ps1docker.bat",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Rebuild(GCC)",
             "type": "shell",
             "windows": {
                 "command": "make clean all",
                 "options": {
-                    "cwd": "${workspaceFolder}\\build\\ps1"
+                    "cwd": "${workspaceFolder}"
                 },
                 "args": []
             },
@@ -40,12 +85,12 @@
             "problemMatcher": []
         },
         {
-            "label": "Clean",
+            "label": "Clean(GCC)",
             "type": "shell",
             "windows": {
                 "command": "make clean",
                 "options": {
-                    "cwd": "${workspaceFolder}\\build\\ps1"
+                    "cwd": "${workspaceFolder}"
                 }
             },
             "presentation": {
@@ -65,7 +110,7 @@
                 },
                 "args": ["-pcdrv -pcdrvbase \"${workspaceFolder\""]
             },
-            "group": "build",
+            "group": "test",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
@@ -76,11 +121,13 @@
             "label": "Run nops",
             "type": "shell",
             "windows": {
-                "command": "nops /fast /exe .\\build\\ps1\\ACC8I.ps-exe /m",
+                // Assumes nops is on the PATH
+                "command": "nops /fast /exe ACC8I.ps-exe /m",
                 "options": {
                     "cwd": "${workspaceFolder}"
                 }
             },
+            "group": "test",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"

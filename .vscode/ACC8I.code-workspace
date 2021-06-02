@@ -28,7 +28,7 @@
 			"pcsx.json": true
 		},
 		"C_Cpp.default.includePath": [
-			"${workspaceFolder}/thirdparty/psyq/include",
+			"${workspaceFolder}/thirdparty/nugget/psyq/include",
 			"${workspaceFolder}/thirdparty/nugget/common",
 			"${workspaceFolder}/include"
 		],
